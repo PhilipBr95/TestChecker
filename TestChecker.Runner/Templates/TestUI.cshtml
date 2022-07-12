@@ -1,0 +1,33 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>TestData Editor</title>
+
+    <style>
+        body { font-family: arial,sans-serif; }
+        .apikey { width: 300px; }
+    </style>    
+</head>
+<body>
+    <form method="post" action="@Model.Action" id="testForm">
+        <table>
+            <tr>
+                <td valign="top">TestData:</td>
+                <td><textarea rows="25" cols="115" id="TestData" name="TestData">@Model.TestData</textarea></td>
+            </tr>
+            <tr>
+                <td valign="top">ApiKey:</td>
+                <td>
+                    <input name="apiKey" type="text" value="@Model.ApiKey" class="apikey">
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><input type="submit" value="Execute" /></td>
+            </tr>
+        </table>
+    </form>
+</body>
+</html>
