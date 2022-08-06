@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TestChecker.Core\TestChecker.Core.csproj" />
-    <ProjectReference Include="..\TestChecker.Runner\TestChecker.Runner.csproj" />
+    <ProjectReference Include="..\..\src\TestChecker.Core\TestChecker.Core.csproj" />
+    <ProjectReference Include="..\..\src\TestChecker.Runner\TestChecker.Runner.csproj" />
   </ItemGroup>
 
 </Project>
