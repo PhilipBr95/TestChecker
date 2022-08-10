@@ -15,7 +15,7 @@ namespace TestChecker.Runner
     {
         public string ApiKey { get; private set; }
         public string TestDataJson { get; private set; } = string.Empty;
-        public dynamic TestData => Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(TestDataJson);
+        public dynamic TestData => Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(TestDataJson ?? String.Empty);
         public Actions Action { get; private set; }
         public string Path { get; private set; }
 
