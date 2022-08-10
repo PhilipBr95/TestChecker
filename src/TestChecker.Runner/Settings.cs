@@ -7,12 +7,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
-using Microsoft.Owin;
 using TestChecker.Core.Enums;
 
 namespace TestChecker.Runner
 {
-    internal class Settings
+    internal partial class Settings
     {
         public string ApiKey { get; private set; }
         public string TestDataJson { get; private set; } = string.Empty;
@@ -57,21 +56,6 @@ namespace TestChecker.Runner
         internal bool HasTestData()
         {
             return !string.IsNullOrWhiteSpace(TestDataJson);
-        }
-
-        internal static async Task<Settings> GetSettingsAsync(IOwinRequest request)
-        {
-            var action = request.Query["Action"];
-            var apiKey = request.Query["ApiKey"];
-            var path = GetTestEndPoint(request.PathBase.Value, request.Path.Value);
-
-            var formData = await request.ReadFormAsync().ConfigureAwait(false);
-            var testDataJson = formData.Get("TestData");
-
-            if (string.IsNullOrWhiteSpace(apiKey))
-                apiKey = formData.Get("ApiKey");
-            
-            return new Settings(path, apiKey, testDataJson, GetAction(action));
         }
 
         private static string GetTestEndPoint(string pathBase, string path)

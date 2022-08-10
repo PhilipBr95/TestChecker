@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Version Condition=" '$(buildVersion)' == '' ">1.0.0.1</Version>
     <Version Condition=" '$(buildVersion)' != '' ">$(buildVersion)</Version>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <SignAssembly>true</SignAssembly>
@@ -14,11 +14,14 @@
     <None Remove="Templates\TestUI.cshtml" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
+	<PackageReference Include="Microsoft.Owin" Version="4.0.1" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.3" />
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.2" />
-    <PackageReference Include="Microsoft.Owin" Version="4.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" /> 
   </ItemGroup>
 
@@ -30,10 +33,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TestChecker.Core\TestChecker.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Enums\" />
   </ItemGroup>
 
 </Project>
