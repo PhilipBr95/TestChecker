@@ -209,8 +209,10 @@ namespace TestChecker.Runner
             if (_dependencies != null && settings != null)
             { 
                 var overridingTestData = JsonConvert.DeserializeObject<List<NamedTestData>>(settings.TestDataJson);
-                overridingTestData.RemoveAll(r => testData.Select(s => s.FullName).Contains(r.FullName) == false);
+                if (overridingTestData == null)
+                    return testData;
 
+                overridingTestData.RemoveAll(r => testData.Select(s => s.FullName).Contains(r.FullName) == false);
                 return overridingTestData;
             }
 
