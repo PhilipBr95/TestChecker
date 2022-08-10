@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -61,7 +62,18 @@ namespace TestChecker.Runner
                 if (settings.Action.HasFlag(Actions.RunReadTests))
                 {
                     _logger?.LogDebug($"{nameof(testChecks.RunReadTestsAsync)} called");
-                    readTestChecks = await testChecks.RunReadTestsAsync().ConfigureAwait(false);
+
+                    try
+                    {
+                        readTestChecks = await testChecks.RunReadTestsAsync().ConfigureAwait(false);
+                    }
+                    catch (NotImplementedException notEx)
+                    {
+                        var message = $"{nameof(testChecks.RunReadTestsAsync)} not implemented by {testChecks.GetType().FullName}";
+                        _logger?.LogDebug(message);
+
+                        writeTestChecks = new TestCheck(message);
+                    }
                 }
             }
             else
@@ -72,7 +84,18 @@ namespace TestChecker.Runner
             if (AreTestsAllowed(settings.ApiKey, _readWriteApiKey) && settings.Action.HasFlag(Actions.RunWriteTests))
             {
                 _logger?.LogDebug($"{nameof(testChecks.RunWriteTestsAsync)} called");
-                writeTestChecks = await testChecks.RunWriteTestsAsync().ConfigureAwait(false);
+
+                try
+                {
+                    writeTestChecks = await testChecks.RunWriteTestsAsync().ConfigureAwait(false);
+                }
+                catch(NotImplementedException notEx)
+                {
+                    var message = $"{nameof(testChecks.RunWriteTestsAsync)} not implemented by {testChecks.GetType().FullName}";
+                    _logger?.LogDebug(message);
+
+                    writeTestChecks = new TestCheck(message);
+                }
             }
 
             List<TestCheckSummary> dependencyTestChecks = null;
@@ -95,13 +118,13 @@ namespace TestChecker.Runner
 
             return new TestCheckSummary
             {
-                System = GetService(url),
+                System = TestCheckSummary.GetSystemString(_assembly, url),
                 Success = success,
                 TestCoverage = coverage,
                 ReadTestChecks = readTestChecks,
                 WriteTestChecks = writeTestChecks,
                 DependencyTestChecks = dependencyTestChecks,
-                TestData = await GetTestDataAsync(),
+                TestData = await GetTestDataAsync(settings),
                 TestDate = DateTime.Now.ToShortDateString(),
                 Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown",
             };
@@ -109,6 +132,9 @@ namespace TestChecker.Runner
 
         internal TData RetrieveTestData(dynamic testData)
         {
+            if (testData == null)
+                return null;
+
             var fullName = NamedTestData.GetFullName(typeof(TData));
 
             try
@@ -163,7 +189,7 @@ namespace TestChecker.Runner
             foreach (var serverApiKey in serverApiKeys)
             {
                 if (string.IsNullOrWhiteSpace(serverApiKey))
-                    break;
+                    return true;
 
                 if (serverApiKey.Equals(apiKey, StringComparison.CurrentCultureIgnoreCase))
                     return true;
@@ -172,25 +198,21 @@ namespace TestChecker.Runner
             return false;
         }
 
-        private string GetService(string url)
+        public async Task<List<NamedTestData>> GetTestDataAsync(Settings settings)
         {
-            var name = _assembly?.GetName();
+            var myTestData = RetrieveTestData(settings?.TestData);            
+            var testData = new List<NamedTestData>() { new NamedTestData<TData>(myTestData ?? _testChecks().GetTestData()) };
 
-            if (name == null)
-                return "Unkown";
-
-            return $"{name.Name}, Version={name.Version}, Url={url}";
-        }
-
-        public async Task<List<NamedTestData>> GetTestDataAsync()
-        {
-            var testData = new List<NamedTestData>();
-            var testChecks = _testChecks();
-            
-            testData.Add(new NamedTestData<TData>(testChecks.GetTestData()));
-
-            if(_dependencies != null)
+            if (_dependencies != null)
                 testData.AddRange(await new TestCheckDependencyRunner(_dependencies, _loggerFactory?.CreateLogger<TestCheckDependencyRunner>()).GetTestDataAsync());
+
+            if (_dependencies != null && settings != null)
+            { 
+                var overridingTestData = JsonConvert.DeserializeObject<List<NamedTestData>>(settings.TestDataJson);
+                overridingTestData.RemoveAll(r => testData.Select(s => s.FullName).Contains(r.FullName) == false);
+
+                return overridingTestData;
+            }
 
             return testData;
         }

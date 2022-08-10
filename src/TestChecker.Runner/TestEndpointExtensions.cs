@@ -52,7 +52,7 @@ namespace TestChecker.Runner
                 {
                     if (context.Request.Path.Value.Equals(REGRESSIONTESTDATA_END_POINT, StringComparison.CurrentCultureIgnoreCase))
                     {
-                        var testData = await runner.GetTestDataAsync().ConfigureAwait(false);
+                        var testData = await runner.GetTestDataAsync(null).ConfigureAwait(false);
                         string json = Newtonsoft.Json.JsonConvert.SerializeObject(testData, _jsonSettings);
 
                         context.Response.ContentType = "application/json";
@@ -125,7 +125,7 @@ namespace TestChecker.Runner
                 {
                     if (context.Request.Path.Value.Equals(REGRESSIONTESTDATA_END_POINT, StringComparison.CurrentCultureIgnoreCase))
                     {
-                        var testData = await runner.GetTestDataAsync().ConfigureAwait(false);
+                        var testData = await runner.GetTestDataAsync(null).ConfigureAwait(false);
                         string json = Newtonsoft.Json.JsonConvert.SerializeObject(testData, _jsonSettings);
 
                         context.Response.ContentType = "application/json";
@@ -176,7 +176,7 @@ namespace TestChecker.Runner
 
             var html = new StreamReader(assembly.GetManifestResourceStream(resourceName)).ReadToEnd();
             
-            var datas = await runner.GetTestDataAsync().ConfigureAwait(false);
+            var datas = await runner.GetTestDataAsync(null).ConfigureAwait(false);
             var json = JsonConvert.SerializeObject(datas, _jsonSettings);
 
             string result = GenerateHtml(settings, html, json);

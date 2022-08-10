@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using TestChecker.Core.Serialisation;
 
@@ -20,7 +21,12 @@ namespace TestChecker.Core
         public string TestDate { get; set; }
         public string Environment { get; set; }
         public string Version { get; set; }
+
+        public static string GetSystemString(Assembly assembly, string url)
+        {
+            var name = assembly?.GetName();
+
+            return $"{name?.Name ?? "Unknown"}, Version={name?.Version}, Url={url}";
+        }
     }
-
-
 }

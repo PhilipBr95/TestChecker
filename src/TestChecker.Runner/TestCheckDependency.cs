@@ -63,7 +63,7 @@ namespace TestChecker.Runner
             }
             catch(Exception ex)
             {
-                return new TestCheckSummary { System = Service.GetType().FullName, ReadTestChecks = new TestCheck(Service.GetType().FullName, ex) };
+                return new TestCheckSummary { System = TestCheckSummary.GetSystemString(Service.GetType().Assembly, Service.BaseUrl), ReadTestChecks = new TestCheck(null, ex) };
             }
         }
 

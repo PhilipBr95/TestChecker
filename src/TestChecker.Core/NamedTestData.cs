@@ -26,7 +26,7 @@ namespace TestChecker.Core
     {
         [JsonProperty(Order = -10)]
         public new T TestData { get; set; }
-
+        
         public NamedTestData()
         {
         }
@@ -36,11 +36,5 @@ namespace TestChecker.Core
             FullName = GetFullName(testData);
             TestData = testData;
         }
-
-        //public NamedTestData(string fullName, T testData)
-        //{
-        //    FullName = fullName;
-        //    TestData = testData;
-        //}        
     }
 }

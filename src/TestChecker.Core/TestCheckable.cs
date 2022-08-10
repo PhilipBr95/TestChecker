@@ -9,24 +9,24 @@ namespace TestChecker.Core
 {
     public class TestCheckable : ITestCheckable
     {
-        private readonly string _baseUrl;
+        public string BaseUrl { get; private set; }
         private readonly IHttpClient _httpClient;
 
         public TestCheckable(string baseUrl)
         {
-            _baseUrl = baseUrl;
+            BaseUrl = baseUrl;
             _httpClient = new HttpClient();
         }
 
         public TestCheckable(string baseUrl, IHttpClient httpClient)
         {
-            _baseUrl = baseUrl;
+            BaseUrl = baseUrl;
             _httpClient = httpClient;
         }
 
         public async Task<List<NamedTestData>> GetTestDataAsync()
         {
-            var json = await _httpClient.GetAsync($"{_baseUrl}/testdata").ConfigureAwait(false);
+            var json = await _httpClient.GetAsync($"{BaseUrl}/testdata").ConfigureAwait(false);
             
             var result = JsonConvert.DeserializeObject<List<NamedTestData>>(json);
             return result;
@@ -35,7 +35,7 @@ namespace TestChecker.Core
         public async Task<TestCheckSummary> RunTestAsync(Actions action, string apiKey, string payload)
         {
 
-            var jsonResult = await _httpClient.PostAsync($"{_baseUrl}/test?action={action}&apikey={apiKey}", payload).ConfigureAwait(false);
+            var jsonResult = await _httpClient.PostAsync($"{BaseUrl}/test?action={action}&apikey={apiKey}", payload).ConfigureAwait(false);
 
             var settings = new JsonSerializerSettings
             {                
