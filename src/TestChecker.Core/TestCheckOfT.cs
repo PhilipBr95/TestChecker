@@ -192,6 +192,28 @@ namespace TestChecker.Core
             return this;
         }
 
+        public TestCheck<T, TData> TestIsTrue(Expression<Func<T, TData, bool>> functionToTest)
+        {
+            var methodCallExpression = (functionToTest.Body as MethodCallExpression);
+            string method = GetMethodName(methodCallExpression);
+
+            try
+            {
+                var function = functionToTest.Compile();
+                var success = function.Invoke(_obj, _testData);
+
+                Add(new TestCheck(method, null, success, null) { ReturnValue = success.ToString() }, true);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                Add(new TestCheck(method, ex), true);
+            }
+
+            return this;
+
+        }
+
         public TestCheck<T, TData> TestIsTrue(Expression<Func<T, bool>> functionToTest)
         {
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
@@ -202,7 +224,7 @@ namespace TestChecker.Core
                 var function = functionToTest.Compile();
                 var success = function.Invoke(_obj);
                 
-                Add(new TestCheck(method, null, success, null), true);
+                Add(new TestCheck(method, null, success, null) { ReturnValue = success.ToString() }, true);
             }
             catch (Exception ex)
             {
@@ -223,7 +245,7 @@ namespace TestChecker.Core
                 var function = functionToTest.Compile();
                 var success = await function.Invoke(_obj).ConfigureAwait(false);
                 
-                Add(new TestCheck(method, null, success, success.ToString()), true);
+                Add(new TestCheck(method, null, success, success.ToString()) { ReturnValue = success.ToString() }, true);
             }
             catch (Exception ex)
             {
