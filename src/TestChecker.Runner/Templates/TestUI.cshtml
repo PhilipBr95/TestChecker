@@ -3,29 +3,64 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title>TestData Editor</title>
+    <title>Test UI</title>
 
     <style>
         body { font-family: arial,sans-serif; }
+        body > header { text-align: center; }
+        input { font-family: arial,sans-serif; font-size:14px; }
         .apikey { width: 300px; }
-    </style>    
+        .submitButton { border: none; border-radius: 5px; background-color: #0d47a1; color: white; font-size: 1rem; padding: 0.5rem 0.8rem; float: right; }
+        .submitButton:focus, .submitButton:hover { filter: brightness(1.4); cursor: pointer; }
+        .json, .apikey { background-color: #f5f7ff; border: 1px solid #d8dae1; border-radius: 5px; }
+        .top {vertical-align: top; padding-top: 2px; }
+    </style>
+    
+    <script language="JavaScript">
+
+    function toggleTests() {
+      checkboxes = document.getElementsByName('testMethods');
+      for(var i=0, n=checkboxes.length;i<n;i++) {
+        checkboxes[i].checked = !checkboxes[i].checked;
+      }
+    }
+    </script>
 </head>
 <body>
+    <header>
+        <h1>Test Configuration</h1>
+        <p>
+            Use this form to edit the test data or exclude certain tests from execution.<br />
+            <b>Specify the Read or Write ApiKey to authorise the tests to run.</b>
+        </p>
+    </header>
     <form method="post" action="@Model.Action" id="testForm">
         <table>
             <tr>
-                <td valign="top">TestData:</td>
-                <td><textarea rows="25" cols="115" id="TestData" name="TestData">@Model.TestData</textarea></td>
+                <td class="top">VersionInfo:</td>
+                <td><textarea class="json" rows="25" cols="100" id="VersionInfos" name="VersionInfos">@Model.VersionInfos</textarea></td>
             </tr>
             <tr>
-                <td valign="top">ApiKey:</td>
+                <td class="top">Test Data:</td>
+                <td><textarea class="json" rows="25" cols="100" id="TestData" name="TestData">@Model.TestData</textarea></td>
+            </tr>
+            <tr>
+                <td class="top">Api Key:</td>
                 <td>
                     <input name="apiKey" type="text" value="@Model.ApiKey" class="apikey">
                 </td>
             </tr>
             <tr>
+                <td class="top">Tests To Run:</td>
+                <td>@Model.MethodNames</td>
+            </tr>
+            <tr>
+                <td class="top"></td>
+                <td><input type="button" value="Toggle All" onclick="toggleTests()" /></td>
+            </tr>
+            <tr>
                 <td></td>
-                <td><input type="submit" value="Execute" /></td>
+                <td><input class="submitButton" type="submit" value="Execute" /></td>
             </tr>
         </table>
     </form>

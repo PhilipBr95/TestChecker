@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using TestChecker.Core.Serialisation;
 using TestChecker.Core.Enums;
 using TestChecker.Core.ContractResolver;
+using System;
+using System.IO;
 
 namespace TestChecker.Core
 {
@@ -32,19 +34,35 @@ namespace TestChecker.Core
             return result;
         }
 
-        public async Task<TestCheckSummary> RunTestAsync(Actions action, string apiKey, string payload)
+        public async Task<T> RunTestAsync<T>(TestSettings testSettings)
         {
+            var jsonResult = await _httpClient.PostAsync($"{BaseUrl}/test?action={testSettings.Action}&apikey={testSettings.ApiKey}", Serialiser.Serialise(testSettings)).ConfigureAwait(false);
 
-            var jsonResult = await _httpClient.PostAsync($"{BaseUrl}/test?action={action}&apikey={apiKey}", payload).ConfigureAwait(false);
-
-            var settings = new JsonSerializerSettings
-            {                
+            var jsonSettings = new JsonSerializerSettings
+            {
                 Converters = new List<JsonConverter> { new CoverageConverter() }
             };
 
-            var result = JsonConvert.DeserializeObject<TestCheckSummary>(jsonResult, settings);
-            //return result?.GetTestChecks();
+            var result = JsonConvert.DeserializeObject<T>(jsonResult, jsonSettings);
             return result;
+        }
+
+        public static List<T> DeserializeSingleOrList<T>(JsonReader jsonReader)
+        {
+            if (jsonReader.Read())
+            {
+                switch (jsonReader.TokenType)
+                {
+                    case JsonToken.StartArray:
+                        return new JsonSerializer().Deserialize<List<T>>(jsonReader);
+
+                    case JsonToken.StartObject:
+                        var instance = new JsonSerializer().Deserialize<T>(jsonReader);
+                        return new List<T> { instance };
+                }
+            }
+
+            throw new InvalidOperationException("Unexpected JSON input");
         }
     }
 }

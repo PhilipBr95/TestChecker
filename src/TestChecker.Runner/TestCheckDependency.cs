@@ -53,15 +53,38 @@ namespace TestChecker.Runner
             }
         }
        
-        public async Task<TestCheckSummary> RunTestAsync(Actions action, string apiKey, string json)
+        public async Task<T> RunTestActionAsync<T>(TestSettings testSettings)
+        {            
+            try
+            {
+                return await Service.RunTestAsync<T>(testSettings).ConfigureAwait(false);
+            }
+            catch(Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<TestCheckSummary> RunTestAsync(TestSettings testSettings)
         {
+            //todo - Has to be dynamic??
+            //todo - Has to be dynamic??
+            //todo - Has to be dynamic??
+            //todo - Has to be dynamic??
+
+            //Replace with the one above
+            //Replace with the one above
+            //Replace with the one above
+
+
+
             if (_isTestCheckStatic) return _testCheckResult;
 
             try
             {
-                return await Service.RunTestAsync(action, apiKey, json).ConfigureAwait(false);
+                return await Service.RunTestAsync<TestCheckSummary>(testSettings).ConfigureAwait(false);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new TestCheckSummary { System = TestCheckSummary.GetSystemString(Service.GetType().Assembly, Service.BaseUrl), ReadTestChecks = new TestCheck(null, ex) };
             }

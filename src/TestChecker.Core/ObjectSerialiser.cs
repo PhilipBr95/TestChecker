@@ -162,7 +162,7 @@ namespace TestChecker.Core
             if (IsStream(_object.GetType())) return JsonConvert.SerializeObject(ReadStream(_object as Stream), _jsonSerializerSettings);
 
             Func<object, JsonSerializerSettings, string> serialiser = JsonConvert.SerializeObject;
-            if (maxDepth > 1) serialiser = new Serialiser(maxDepth).SerializeObject;
+            if (maxDepth > 1) serialiser = new DepthSerialiser(maxDepth).SerializeObject;
 
             string json;
 

@@ -16,21 +16,21 @@ namespace TestChecker.Runner
             _logger = logger;
         }
 
-        internal async Task<List<TestCheckSummary>> RunTestsAsync(Settings settings)
+        internal async Task<List<T>> RunTestActionAsync<T>(TestSettings settings) where T : IListOrObject<T>, new()
         {             
-            if (_dependencies == null) return null;
+            if (_dependencies == null) return default;
 
-            var testChecks = new List<TestCheckSummary>();
+            var taskResults = new List<T>();
 
             foreach (var dependency in _dependencies)
             {
                 _logger?.LogDebug($"{nameof(dependency.RunTestAsync)} called on {dependency.Service} with {settings.TestDataJson}");
 
-                var testCheckSummary = await dependency.RunTestAsync(settings.Action, settings.ApiKey, settings.TestDataJson).ConfigureAwait(false);
-                testChecks.Add(testCheckSummary);
+                var taskResult = await dependency.RunTestActionAsync<T>(settings).ConfigureAwait(false);
+                taskResults.Add(taskResult);
             }
             
-            return testChecks;
+            return taskResults;
         }
 
         internal async Task<List<NamedTestData>> GetTestDataAsync()

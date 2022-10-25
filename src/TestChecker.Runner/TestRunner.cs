@@ -36,7 +36,7 @@ namespace TestChecker.Runner
             _testChecks = testChecks;            
         }
 
-        public async Task<dynamic> HandleRequestAsync(Settings settings, string url)
+        public async Task<dynamic> HandleRequestAsync(TestSettings settings, string url)
         {
             ITestChecks<TData> testChecks = _testChecks();            
 
@@ -54,31 +54,50 @@ namespace TestChecker.Runner
                 return testChecks.GetTestData();
             }
 
+            if (settings.Action.HasFlag(Actions.GetVersion))
+            {
+                _logger?.LogDebug($"{nameof(VersionInfo)} called");
+
+                var versions = new VersionInfoSummary();
+                var myVersion = new VersionInfo();
+
+                if (_dependencies != null)
+                {
+                    var dependencyVersions = await new TestCheckDependencyRunner(_dependencies, _loggerFactory?.CreateLogger<TestCheckDependencyRunner>())
+                        .RunTestActionAsync<VersionInfoSummary>(settings)
+                        .ConfigureAwait(false);
+
+                    //versions.Add(dependencyVersions);
+                    myVersion.AddChildVersions(dependencyVersions);
+                }
+                
+                versions.AddVersionInfo(myVersion);
+                return versions;
+            }
+
             TestCheck readTestChecks = null;
             TestCheck writeTestChecks = null;            
 
             if (AreTestsAllowed(settings.ApiKey, _readApiKey, _readWriteApiKey))
             {
-                if (settings.Action.HasFlag(Actions.RunReadTests))
+                if (settings.Action.HasRunReadTests())
                 {
                     _logger?.LogDebug($"{nameof(testChecks.RunReadTestsAsync)} called");
 
                     try
                     {
-                        readTestChecks = await testChecks.RunReadTestsAsync().ConfigureAwait(false);
+                        readTestChecks = await testChecks.RunReadTestsAsync(settings.Action.HasGetNames()).ConfigureAwait(false);
                     }
                     catch (NotImplementedException notEx)
                     {
                         var message = $"{nameof(testChecks.RunReadTestsAsync)} not implemented by {testChecks.GetType().FullName}";
                         _logger?.LogDebug(message);
-
-                        writeTestChecks = new TestCheck(message);
                     }
                 }
             }
             else
             {
-                readTestChecks = new TestCheck($"Your ApiKey does not match the Read or Write ApiKey!");
+                readTestChecks = new TestCheck($"Your ApiKey does not match the Read or Write ApiKey!", null, false);
             }
 
             if (AreTestsAllowed(settings.ApiKey, _readWriteApiKey) && settings.Action.HasFlag(Actions.RunWriteTests))
@@ -94,16 +113,16 @@ namespace TestChecker.Runner
                     var message = $"{nameof(testChecks.RunWriteTestsAsync)} not implemented by {testChecks.GetType().FullName}";
                     _logger?.LogDebug(message);
 
-                    writeTestChecks = new TestCheck(message);
+                    writeTestChecks = null;
                 }
             }
 
             List<TestCheckSummary> dependencyTestChecks = null;
 
-            if (_dependencies != null)
-            {                
-                dependencyTestChecks = await new TestCheckDependencyRunner(_dependencies, _loggerFactory?.CreateLogger<TestCheckDependencyRunner>()).RunTestsAsync(settings).ConfigureAwait(false);
-            }
+            if (_dependencies != null)             
+                dependencyTestChecks = await new TestCheckDependencyRunner(_dependencies, _loggerFactory?.CreateLogger<TestCheckDependencyRunner>())
+                    .RunTestActionAsync<TestCheckSummary>(settings)
+                    .ConfigureAwait(false);
 
             var coverages = new List<Coverage> { readTestChecks?.Coverage, writeTestChecks?.Coverage };
 
@@ -125,8 +144,7 @@ namespace TestChecker.Runner
                 WriteTestChecks = writeTestChecks,
                 DependencyTestChecks = dependencyTestChecks,
                 TestData = await GetTestDataAsync(settings),
-                TestDate = DateTime.Now.ToShortDateString(),
-                Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown",
+                TestDate = DateTime.Now.ToShortDateString()
             };
         }
 
@@ -198,7 +216,7 @@ namespace TestChecker.Runner
             return false;
         }
 
-        public async Task<List<NamedTestData>> GetTestDataAsync(Settings settings)
+        public async Task<List<NamedTestData>> GetTestDataAsync(TestSettings settings)
         {
             var myTestData = RetrieveTestData(settings?.TestData);            
             var testData = new List<NamedTestData>() { new NamedTestData<TData>(myTestData ?? _testChecks().GetTestData()) };

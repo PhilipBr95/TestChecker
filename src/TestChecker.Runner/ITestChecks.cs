@@ -5,7 +5,7 @@ namespace TestChecker.Runner
 {
     public interface ITestChecks<TData>
     {
-        Task<TestCheck> RunReadTestsAsync();
+        Task<TestCheck> RunReadTestsAsync(bool getNames);
         Task<TestCheck> RunWriteTestsAsync();
         TData GetTestData();        
         void SetTestData(TData testData);

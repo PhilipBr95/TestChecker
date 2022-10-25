@@ -18,7 +18,7 @@ namespace TestChecker.Runner.Tests
             return _testData;
         }
 
-        public Task<TestCheck> RunReadTestsAsync()
+        public Task<TestCheck> RunReadTestsAsync(bool getNames)
         {
             throw new System.NotImplementedException();
         }

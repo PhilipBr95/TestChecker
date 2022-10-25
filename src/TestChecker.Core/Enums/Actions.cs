@@ -11,10 +11,18 @@ namespace TestChecker.Core.Enums
         RunWriteTests = 4,
 
         WithDetail = 8,
+        GetNames = 16,
+        GetVersion = 32,
 
         RunTests = RunReadTests | RunWriteTests,
         RunTestsWithDetail = RunTests | WithDetail,
         RunReadWithDetail = RunReadTests | WithDetail,
         RunWriteWithDetail = RunWriteTests | WithDetail,
+    }
+
+    public static class ActionsExtensions
+    {
+        public static bool HasRunReadTests(this Actions actions) => actions.HasFlag(Actions.RunReadTests);
+        public static bool HasGetNames(this Actions actions) => actions.HasFlag(Actions.GetNames);
     }
 }

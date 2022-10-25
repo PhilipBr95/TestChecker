@@ -3,6 +3,7 @@ using TestChecker.Runner;
 using WebApplicationChild;
 using WebApplicationChild.Models;
 
+namespace WebApplicationChild;
 internal class MyTestChecks : ITestChecks<MyTestData>
 {
     private IFakeController _fakeController;
@@ -18,11 +19,11 @@ internal class MyTestChecks : ITestChecks<MyTestData>
         return _testData;
     }
 
-    public Task<TestCheck> RunReadTestsAsync()
+    public Task<TestCheck> RunReadTestsAsync(bool getNames)
     {
-        var tests = new TestCheck(_testData.Surname == "Briggs") { ReturnValue = _testData.Surname };
+        var tests = new TestCheck("RunReadTestsAsync Tests", getNames);
         
-        var testController = new TestCheck<IFakeController, MyTestData>(_fakeController, _testData, CoverageMethod.MethodsOnly, null);
+        var testController = new TestCheck<IFakeController, MyTestData>(_fakeController, _testData, CoverageMethod.MethodsOnly, null, getNames);
         testController.TestIsTrue((obj, data) => obj.GetData(data.Town));
         testController.TestIsObject((obj, data) => obj.GetData(data.Town));
         testController.TestIsObject((obj, data) => obj.GetDateTime(data.City));

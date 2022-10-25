@@ -9,7 +9,7 @@ namespace TestChecker.Core
 {
 
     [JsonConverter(typeof(TestCheckSummaryConverter))]
-    public class TestCheckSummary
+    public class TestCheckSummary : IListOrObject<TestCheckSummary>
     {
         public string System { get; set; }
         public bool? Success { get; set; }
@@ -19,14 +19,23 @@ namespace TestChecker.Core
         public List<TestCheckSummary> DependencyTestChecks { get; set; }
         public object TestData { get; set; }
         public string TestDate { get; set; }
-        public string Environment { get; set; }
-        public string Version { get; set; }
+        public object Data { get; set; }
 
         public static string GetSystemString(Assembly assembly, string url)
         {
             var name = assembly?.GetName();
 
             return $"{name?.Name ?? "Unknown"}, Version={name?.Version}, Url={url}";
+        }
+
+        public void Add(TestCheckSummary obj)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Add(IEnumerable<TestCheckSummary> list)
+        {
+            throw new NotImplementedException();
         }
     }
 }

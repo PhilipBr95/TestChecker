@@ -1,6 +1,7 @@
 ﻿using TestChecker.Core;
 using TestChecker.Runner;
 using WebApplicationChildChild;
+namespace WebApplicationChildChild;
 
 internal class MyTestChecks : ITestChecks<MyTestData>
 {
@@ -11,9 +12,12 @@ internal class MyTestChecks : ITestChecks<MyTestData>
         return _testData;
     }
 
-    public Task<TestCheck> RunReadTestsAsync()
+    public Task<TestCheck> RunReadTestsAsync(bool getNames)
     {
-        return Task.FromResult(new TestCheck(_testData.Surname2 == "House") {  ReturnValue= _testData.Surname2 } );
+        var tests = new TestCheck("Read Tests", getNames);
+        tests.Add(new TestCheck("Surname2 Test", _testData.Surname2, _testData.Surname2 == "House"));
+
+        return Task.FromResult(tests);
     }
 
     public Task<TestCheck> RunWriteTestsAsync()

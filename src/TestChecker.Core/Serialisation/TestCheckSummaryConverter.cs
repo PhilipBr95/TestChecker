@@ -30,14 +30,12 @@ namespace TestChecker.Core.Serialisation
                 var summary = new TestCheckSummary
                 {
                     DependencyTestChecks = deps,
-                    Environment = jObject["Environment"].Value<string>(),
                     ReadTestChecks = jObject["ReadTestChecks"].ToObject<TestCheck>(),
                     Success = jObject["Success"].Value<bool>(),
                     System = jObject["System"].Value<string>(),
                     TestCoverage = jObject["TestCoverage"].ToObject<Coverage>(),
                     TestData = null,    //Not the best
                     TestDate = jObject["TestDate"].Value<string>(),
-                    Version = jObject["Version"].Value<string>(),
                     WriteTestChecks = jObject["WriteTestChecks"].ToObject<TestCheck>(),
                 };
 

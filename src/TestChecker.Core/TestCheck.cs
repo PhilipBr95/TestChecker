@@ -28,6 +28,7 @@ namespace TestChecker.Core
 
         private string _returnValue = null;
         private bool _hasReturnValue = false;
+        internal bool _getNames;
 
         [JsonProperty(NullValueHandling = NullValueHandling.Include, Order = -13)]
         public string ReturnValue
@@ -54,14 +55,18 @@ namespace TestChecker.Core
         {
         }
 
-        public TestCheck(string description)
+        public TestCheck(string description, bool getNames)
         {
             Description = description;
+            _getNames = getNames;
         }
-        public TestCheck(bool success)
+
+        public TestCheck(string description, string returnValue, bool success)
         {
+            Description = description;
             Success = success;
-            
+            ReturnValue = returnValue;
+
             if (success)
             {
                 SuccessCount++;
@@ -138,11 +143,13 @@ namespace TestChecker.Core
 
         public TestCheck TestIsTrue(string description, Func<bool> functionToTest)
         {
+            if (_getNames) return GetNameTestCheck(description);
+
             try
             {
                 var success = functionToTest();
 
-                Add(new TestCheck(success) { Description = description, ReturnValue = success.ToString() }, true);
+                Add(new TestCheck(description, success.ToString(), success), true);
             }
             catch (Exception ex)
             {
@@ -154,11 +161,13 @@ namespace TestChecker.Core
 
         public async Task<TestCheck> TestIsTrueAsync(string description, Func<Task<bool>> functionToTest)
         {
+            if (_getNames) return GetNameTestCheck(description);
+
             try
             {
                 var success = await functionToTest().ConfigureAwait(false);
 
-                Add(new TestCheck(success) { Description = description, ReturnValue = success.ToString() }, true);
+                Add(new TestCheck(description, success.ToString(), success), true);
             }
             catch (Exception ex)
             {
@@ -211,6 +220,11 @@ namespace TestChecker.Core
         public async static Task<TestCheck> NotImplementedAsync(string objectName)
         {
             return await Task.FromResult(NotImplemented(objectName)).ConfigureAwait(false);
+        }
+        private TestCheck GetNameTestCheck(string method)
+        {
+            Add(new TestCheck() { Method = method }, true);
+            return this;
         }
     }
 }

@@ -5,12 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using TestChecker.Core;
 
 namespace TestChecker.Runner
 {
-    internal partial class Settings
+    internal partial class TestSettingsRetriever
     {
-        internal static async Task<Settings> GetSettingsAsync(IOwinRequest request)
+        internal static async Task<TestSettings> GetSettingsAsync(IOwinRequest request)
         {
             var action = request.Query["Action"];
             var apiKey = request.Query["ApiKey"];
@@ -22,7 +23,7 @@ namespace TestChecker.Runner
             if (string.IsNullOrWhiteSpace(apiKey))
                 apiKey = formData.Get("ApiKey");
 
-            return new Settings(path, apiKey, testDataJson, GetAction(action));
+            return new TestSettings(path, apiKey, testDataJson, GetAction(action, request.Path.Value));
         }
     }
 }
