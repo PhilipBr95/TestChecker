@@ -14,9 +14,7 @@ using TestChecker.Core.Enums;
 namespace TestChecker.Runner
 {
     internal partial class TestSettingsRetriever
-    {
-        private Actions getVersion;        
-
+    {      
         internal static async Task<TestSettings> GetSettingsAsync(HttpRequest request)
         {
             var action = request.Query["Action"];

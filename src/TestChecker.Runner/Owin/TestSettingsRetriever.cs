@@ -23,6 +23,9 @@ namespace TestChecker.Runner
             if (string.IsNullOrWhiteSpace(apiKey))
                 apiKey = formData.Get("ApiKey");
 
+            if (string.IsNullOrWhiteSpace(action))
+                action = formData.Get("Action");
+
             return new TestSettings(path, apiKey, testDataJson, GetAction(action, request.Path.Value));
         }
     }
