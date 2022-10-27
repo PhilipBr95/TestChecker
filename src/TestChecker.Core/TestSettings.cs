@@ -25,8 +25,9 @@ namespace TestChecker.Core
             TestDataJson = testDataJson;
             Action = actions;
         }
-        public TestSettings(Actions actions)
+        public TestSettings(string path, Actions actions)
         {
+            Path = path;
             Action = actions;
         }
 

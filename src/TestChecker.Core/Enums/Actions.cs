@@ -24,5 +24,6 @@ namespace TestChecker.Core.Enums
     {
         public static bool HasRunReadTests(this Actions actions) => actions.HasFlag(Actions.RunReadTests);
         public static bool HasGetNames(this Actions actions) => actions.HasFlag(Actions.GetNames);
+        public static bool IsValid(this Actions actions) => (int)actions < 64;
     }
 }

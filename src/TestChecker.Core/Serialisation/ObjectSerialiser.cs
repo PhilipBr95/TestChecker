@@ -11,7 +11,7 @@ using TestChecker.Core.ContractResolver;
 using TestChecker.Core.Extensions;
 using TestChecker.Core.Serialisation;
 
-namespace TestChecker.Core
+namespace TestChecker.Core.Serialisation
 {
     public class ObjectSerialiser : IObjectSerialiser
     {

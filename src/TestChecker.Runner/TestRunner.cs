@@ -58,27 +58,24 @@ namespace TestChecker.Runner
             {
                 _logger?.LogDebug($"{nameof(VersionInfo)} called");
 
-                var versions = new VersionInfoSummary();
                 var myVersion = new VersionInfo();
 
                 if (_dependencies != null)
                 {
                     var dependencyVersions = await new TestCheckDependencyRunner(_dependencies, _loggerFactory?.CreateLogger<TestCheckDependencyRunner>())
-                        .RunTestActionAsync<VersionInfoSummary>(settings)
+                        .RunTestActionAsync<VersionInfo>(settings)
                         .ConfigureAwait(false);
 
-                    //versions.Add(dependencyVersions);
-                    myVersion.AddChildVersions(dependencyVersions);
+                    myVersion.AddDependencies(dependencyVersions);
                 }
-                
-                versions.AddVersionInfo(myVersion);
-                return versions;
+                                
+                return myVersion;
             }
 
             TestCheck readTestChecks = null;
             TestCheck writeTestChecks = null;            
 
-            if (AreTestsAllowed(settings.ApiKey, _readApiKey, _readWriteApiKey))
+            if (AreTestsAllowed(settings, _readApiKey, _readWriteApiKey))
             {
                 if (settings.Action.HasRunReadTests())
                 {
@@ -100,7 +97,7 @@ namespace TestChecker.Runner
                 readTestChecks = new TestCheck($"Your ApiKey does not match the Read or Write ApiKey!", null, false);
             }
 
-            if (AreTestsAllowed(settings.ApiKey, _readWriteApiKey) && settings.Action.HasFlag(Actions.RunWriteTests))
+            if (AreTestsAllowed(settings, _readWriteApiKey) && settings.Action.HasFlag(Actions.RunWriteTests))
             {
                 _logger?.LogDebug($"{nameof(testChecks.RunWriteTestsAsync)} called");
 
@@ -202,14 +199,26 @@ namespace TestChecker.Runner
             return null;
         }
 
-        private bool AreTestsAllowed(string apiKey, params string[] serverApiKeys)
+        private bool AreTestsAllowed(TestSettings testSettings, params string[] serverApiKeys)
         {
+            if (testSettings.Action.IsValid() == false)
+            {
+                _logger?.LogWarning($"{nameof(testSettings.Action)} of {testSettings.Action} is not recognised");
+                return false;
+            }
+
+            if (testSettings.Action.HasGetNames())
+            {
+                //We're not going to actually run the tests!!
+                return true;
+            }
+
             foreach (var serverApiKey in serverApiKeys)
             {
                 if (string.IsNullOrWhiteSpace(serverApiKey))
                     return true;
 
-                if (serverApiKey.Equals(apiKey, StringComparison.CurrentCultureIgnoreCase))
+                if (serverApiKey.Equals(testSettings.ApiKey, StringComparison.CurrentCultureIgnoreCase))
                     return true;
             }
 

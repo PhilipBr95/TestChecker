@@ -36,7 +36,7 @@ namespace TestChecker.Core
 
         public async Task<T> RunTestAsync<T>(TestSettings testSettings)
         {
-            var jsonResult = await _httpClient.PostAsync($"{BaseUrl}/test?action={testSettings.Action}&apikey={testSettings.ApiKey}", Serialiser.Serialise(testSettings)).ConfigureAwait(false);
+            var jsonResult = await _httpClient.PostAsync($"{BaseUrl}/test?action={testSettings.Action}&apikey={testSettings.ApiKey}", JsonSerialiser.Serialise(testSettings)).ConfigureAwait(false);
 
             var jsonSettings = new JsonSerializerSettings
             {

@@ -25,12 +25,14 @@ namespace TestChecker.Runner
 
             if (request.HasFormContentType)
             {
-                //Old style
-
+                //Used on the TestUI form
                 request.Form.TryGetValue("TestData", out StringValues testDataJson);
 
                 if (string.IsNullOrWhiteSpace(apiKey))
                     request.Form.TryGetValue("ApiKey", out apiKey);
+
+                if (string.IsNullOrWhiteSpace(action))
+                    request.Form.TryGetValue("Action", out action);
 
                 return new TestSettings(path, apiKey, testDataJson, GetAction(action, request.Path));
             }
@@ -45,7 +47,7 @@ namespace TestChecker.Runner
                 }
             }
 
-            return new TestSettings(GetAction(action, request.Path));
+            return new TestSettings(path, GetAction(action, request.Path));
         }        
 
         private static string GetTestEndPoint(string pathBase, string path)
@@ -68,7 +70,7 @@ namespace TestChecker.Runner
                     return Actions.GetTestData;
 
                 if (path.IndexOf(TestEndpointExtensions.TESTUI_END_POINT, StringComparison.OrdinalIgnoreCase) >= 0)
-                    return Actions.GetNames | Actions.RunTests;
+                    return Actions.RunTests;
             }
 
             return Actions.RunTests;

@@ -16,7 +16,7 @@ namespace TestChecker.Runner
             _logger = logger;
         }
 
-        internal async Task<List<T>> RunTestActionAsync<T>(TestSettings settings) where T : IListOrObject<T>, new()
+        internal async Task<List<T>> RunTestActionAsync<T>(TestSettings settings) where T : new()
         {             
             if (_dependencies == null) return default;
 

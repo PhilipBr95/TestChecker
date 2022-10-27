@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace TestChecker.Runner
+namespace TestChecker.Core.Serialisation
 {
     internal class ShouldSerializeContractResolver : DefaultContractResolver
     {            

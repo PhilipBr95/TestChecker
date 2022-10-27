@@ -9,7 +9,7 @@ namespace TestChecker.Core
 {
 
     [JsonConverter(typeof(TestCheckSummaryConverter))]
-    public class TestCheckSummary : IListOrObject<TestCheckSummary>
+    public class TestCheckSummary
     {
         public string System { get; set; }
         public bool? Success { get; set; }

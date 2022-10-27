@@ -11,6 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Templates\json-viewer.css" />
+    <None Remove="Templates\json-viewer.js" />
     <None Remove="Templates\TestUI.cshtml" />
   </ItemGroup>
 
@@ -26,6 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Templates\json-viewer.css" />
+    <EmbeddedResource Include="Templates\json-viewer.js" />
     <EmbeddedResource Include="Templates\TestUI.cshtml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>

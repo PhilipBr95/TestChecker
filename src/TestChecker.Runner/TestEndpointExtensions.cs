@@ -28,14 +28,7 @@ namespace TestChecker.Runner
 
         const string READ_ENVIRONMENT_NAME = "TEST_READ_SECURITY_TOKEN";
         const string READ_WRITE_ENVIRONMENT_NAME = "TEST_READWRITE_SECURITY_TOKEN";
-
-        private static JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
-        {
-            Formatting = Formatting.Indented,
-            NullValueHandling = NullValueHandling.Ignore,
-            ContractResolver = new ShouldSerializeContractResolver(),
-            Converters = new List<JsonConverter> { new MemoryStreamJsonConverter() }
-        };
+        
         private static IMethodNameExtractorService _methodNameExtractor;
 
         public static void AddTestEndpoint(this IServiceCollection services)
@@ -75,7 +68,7 @@ namespace TestChecker.Runner
                     if (context.Request.Path.Value.Equals(TESTDATA_END_POINT, StringComparison.CurrentCultureIgnoreCase))
                     {                        
                         var testData = await runner.GetTestDataAsync(null).ConfigureAwait(false);
-                        string json = Newtonsoft.Json.JsonConvert.SerializeObject(testData, _jsonSettings);
+                        string json = JsonSerialiser.Serialise(testData);
 
                         context.Response.ContentType = "application/json";
                         await context.Response.WriteAsync(json).ConfigureAwait(false);
@@ -139,46 +132,65 @@ namespace TestChecker.Runner
         private async static Task<string> ExecuteTestsAsync<TData>(TestSettings settings, TestRunner<TData> runner, string url) where TData : class
         {
             var response = await runner.HandleRequestAsync(settings, url).ConfigureAwait(false);
-            var json = JsonConvert.SerializeObject(response, _jsonSettings);
+            var json = JsonSerialiser.Serialise(response);
 
             return json;
         }
 
         private async static Task<string> GenerateTestUIAsync<TData>(TestSettings settings, Assembly callingAssembly, TestRunner<TData> runner, string url, Func<ITestChecks<TData>> testChecks) where TData : class
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            string resourceName = assembly.GetManifestResourceNames()
-                                          .Single(str => str.EndsWith("TestUI.cshtml"));
-
-            var html = new StreamReader(assembly.GetManifestResourceStream(resourceName)).ReadToEnd();
-
             var datas = await runner.GetTestDataAsync(null).ConfigureAwait(false);
 
             //Future-proofing
-            var versionSettings = new TestSettings(Core.Enums.Actions.GetVersion);            
+            var versionSettings = new TestSettings(TestEndpointExtensions.TEST_END_POINT, Core.Enums.Actions.GetVersion);
             var versionsJson = await ExecuteTestsAsync<TData>(versionSettings, runner, url);
-            var versionsSummary = JsonConvert.DeserializeObject<VersionInfoSummary>(versionsJson);
-            //var versionInfos = (versionsSummary.Data as JArray).ToObject<IEnumerable<VersionInfo>>();
+            var versionsSummary = JsonConvert.DeserializeObject<VersionInfo>(versionsJson);
 
-            var names = await ExecuteTestsAsync<TData>(settings, runner, url);
+            //Get the function names
+            var nameSettings = new TestSettings(TestEndpointExtensions.TEST_END_POINT, Core.Enums.Actions.GetNames | Core.Enums.Actions.RunReadTests);
+            var names = await ExecuteTestsAsync<TData>(nameSettings, runner, url);
             var namesSummary = JsonConvert.DeserializeObject<TestCheckSummary>(names);
             IEnumerable<string> allNames = _methodNameExtractor.RetrieveMethodNames(namesSummary);
 
-            var json = JsonConvert.SerializeObject(datas, _jsonSettings);
+            var json = JsonSerialiser.Serialise(datas);
 
-            string result = GenerateHtml(settings, html, json, allNames, versionsSummary);
+            string result = GenerateHtml(settings, json, allNames, versionsSummary);
             return result;
         }
 
-        private static string GenerateHtml(TestSettings settings, string html, string json, IEnumerable<string> methodNames, VersionInfoSummary versionsSummary)
+        private static string GenerateHtml(TestSettings settings, string json, IEnumerable<string> methodNames, VersionInfo versionInfo)
         {
-            html = html.Replace("@Model.VersionInfos", Serialiser.Serialise(versionsSummary));
-            html = html.Replace("@Model.Action", settings.Path);
+            string html = GetHtmlTemplate();
+
+            html = html.Replace("@Model.VersionInfos", JsonSerialiser.Serialise(versionInfo));
+            html = html.Replace("@Model.FormAction", settings.Path);
             html = html.Replace("@Model.TestData", json);
             html = html.Replace("@Model.MethodNames", string.Join("<br />", methodNames.Select((s, i) => $"<input type='checkbox' name='testMethods' id='method{i}' value='{s}' checked /><label for='method{i}'>{s}</label>")));
 
             return html.Replace("@Model.ApiKey", settings.ApiKey);
         }
+
+        private static string GetHtmlTemplate()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            string html = GetResourceString("TestUI.cshtml");
+            string js = GetResourceString("json-viewer.js");
+            string css = GetResourceString("json-viewer.css");
+
+            html = html.Replace("@Model.JSONViewerJs", js);
+            html = html.Replace("@Model.JSONViewerCss", css);
+            return html;
+
+            string GetResourceString(string resourceName)
+            {
+                resourceName = assembly.GetManifestResourceNames()
+                                       .Single(str => str.EndsWith(resourceName));
+                var text = new StreamReader(assembly.GetManifestResourceStream(resourceName)).ReadToEnd();
+                return text;
+            }
+        }
+
 
         private static string GetEnvironmentVariable(string environmentVariable)
         {

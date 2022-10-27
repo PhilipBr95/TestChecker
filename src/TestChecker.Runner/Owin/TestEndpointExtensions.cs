@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using TestChecker.Core;
+using TestChecker.Core.Serialisation;
 using TestChecker.Runner.Services;
 
 namespace TestChecker.Runner
@@ -26,7 +27,7 @@ namespace TestChecker.Runner
                     if (context.Request.Path.Value.Equals(TESTDATA_END_POINT, StringComparison.CurrentCultureIgnoreCase))
                     {
                         var testData = await runner.GetTestDataAsync(null).ConfigureAwait(false);
-                        string json = Newtonsoft.Json.JsonConvert.SerializeObject(testData, _jsonSettings);
+                        string json = JsonSerialiser.Serialise(testData);
 
                         context.Response.ContentType = "application/json";
                         await context.Response.WriteAsync(json).ConfigureAwait(false);
