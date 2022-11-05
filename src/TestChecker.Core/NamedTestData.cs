@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 
 namespace TestChecker.Core
 {
+    [DebuggerDisplay("NamedTestData: {FullName}")]
     public class NamedTestData
     {
         [JsonProperty(Order = -20)]
@@ -22,6 +24,7 @@ namespace TestChecker.Core
         }
     }
 
+    [DebuggerDisplay("NamedTestData: {FullName}")]
     public class NamedTestData<T> : NamedTestData where T : class
     {
         [JsonProperty(Order = -10)]

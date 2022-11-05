@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\TestChecker.Runner\TestChecker.Runner.csproj" />
     <ProjectReference Include="..\WebApplicationChildClient\WebApplicationChildClient.csproj" />
+    <ProjectReference Include="..\WebApplicationOldChildClient\WebApplicationOldChildClient.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,8 +1,12 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using System;
+using TestChecker.Core.Serialisation;
 
 namespace TestChecker.Core.Enums
 {
     [Flags]
+    [JsonConverter(typeof(FlagConverter<Actions>))]
     public enum Actions
     {
         //DON'T change these due to backwards compat!!!

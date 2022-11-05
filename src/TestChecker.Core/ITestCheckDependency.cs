@@ -8,7 +8,8 @@ namespace TestChecker.Core
     {
         ITestCheckable Service { get; }        
         Task<T> RunTestActionAsync<T>(TestSettings testSettings);
-        Task<TestCheckSummary> RunTestAsync(TestSettings testSettings);
+        //Task<TestCheckSummary> RunTestAsync(TestSettings testSettings);
         Task<List<NamedTestData>> GetTestDataAsync();
+        Task<VersionInfo> GetVersionInfoAsync();
     }
 }

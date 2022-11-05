@@ -17,19 +17,17 @@ namespace TestChecker.Runner
     internal class TestRunner<TData> where TData : class
     {
         private readonly Assembly _assembly;
-        private readonly List<ITestCheckDependency> _dependencies;
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger _logger;
+        private readonly ITestCheckDependencyRunner _testCheckDependencyRunner;
+        private readonly ILogger<ITestChecks<TData>> _logger;
         private readonly string _readApiKey;
         private readonly string _readWriteApiKey;
         private readonly Func<ITestChecks<TData>> _testChecks;
         
-        public TestRunner(Assembly assembly, List<ITestCheckDependency> dependencies, Func<ITestChecks<TData>> testChecks, ILoggerFactory loggerFactory, string readApiKey, string readWriteApiKey)
+        public TestRunner(Assembly assembly, ITestCheckDependencyRunner testCheckDependencyRunner, Func<ITestChecks<TData>> testChecks, ILogger<ITestChecks<TData>> logger, string readApiKey, string readWriteApiKey)
         {
             _assembly = assembly;
-            _dependencies = dependencies;
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory?.CreateLogger<TestRunner<TData>>();
+            _testCheckDependencyRunner = testCheckDependencyRunner;
+            _logger = logger;
             _readApiKey = readApiKey;
             _readWriteApiKey = readWriteApiKey;
 
@@ -58,13 +56,12 @@ namespace TestChecker.Runner
             {
                 _logger?.LogDebug($"{nameof(VersionInfo)} called");
 
-                var myVersion = new VersionInfo();
+                var myVersion = new VersionInfo(true);
 
-                if (_dependencies != null)
+                if (_testCheckDependencyRunner?.Dependencies != null)
                 {
-                    var dependencyVersions = await new TestCheckDependencyRunner(_dependencies, _loggerFactory?.CreateLogger<TestCheckDependencyRunner>())
-                        .RunTestActionAsync<VersionInfo>(settings)
-                        .ConfigureAwait(false);
+                    var dependencyVersions = await _testCheckDependencyRunner.GetVersionInfoAsync()
+                                                                             .ConfigureAwait(false);
 
                     myVersion.AddDependencies(dependencyVersions);
                 }
@@ -116,10 +113,9 @@ namespace TestChecker.Runner
 
             List<TestCheckSummary> dependencyTestChecks = null;
 
-            if (_dependencies != null)             
-                dependencyTestChecks = await new TestCheckDependencyRunner(_dependencies, _loggerFactory?.CreateLogger<TestCheckDependencyRunner>())
-                    .RunTestActionAsync<TestCheckSummary>(settings)
-                    .ConfigureAwait(false);
+            if (_testCheckDependencyRunner?.Dependencies != null)
+                dependencyTestChecks = await _testCheckDependencyRunner.RunTestActionAsync<TestCheckSummary>(settings)
+                                                                       .ConfigureAwait(false);
 
             var coverages = new List<Coverage> { readTestChecks?.Coverage, writeTestChecks?.Coverage };
 
@@ -230,17 +226,20 @@ namespace TestChecker.Runner
             var myTestData = RetrieveTestData(settings?.TestData);            
             var testData = new List<NamedTestData>() { new NamedTestData<TData>(myTestData ?? _testChecks().GetTestData()) };
 
-            if (_dependencies != null)
-                testData.AddRange(await new TestCheckDependencyRunner(_dependencies, _loggerFactory?.CreateLogger<TestCheckDependencyRunner>()).GetTestDataAsync());
+            if (_testCheckDependencyRunner?.Dependencies != null)
+            {
+                testData.AddRange(await _testCheckDependencyRunner.GetTestDataAsync()
+                                                                  .ConfigureAwait(false));
 
-            if (_dependencies != null && settings != null)
-            { 
-                var overridingTestData = JsonConvert.DeserializeObject<List<NamedTestData>>(settings.TestDataJson);
-                if (overridingTestData == null)
-                    return testData;
+                if (settings?.HasTestData() == true)
+                {
+                    var overridingTestData = JsonConvert.DeserializeObject<List<NamedTestData>>(settings.TestDataJson);
+                    if (overridingTestData == null)
+                        return testData;
 
-                overridingTestData.RemoveAll(r => testData.Select(s => s.FullName).Contains(r.FullName) == false);
-                return overridingTestData;
+                    overridingTestData.RemoveAll(r => testData.Select(s => s.FullName).Contains(r.FullName) == false);
+                    return overridingTestData;
+                }
             }
 
             return testData;

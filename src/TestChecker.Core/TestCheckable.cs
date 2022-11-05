@@ -34,35 +34,39 @@ namespace TestChecker.Core
             return result;
         }
 
-        public async Task<T> RunTestAsync<T>(TestSettings testSettings)
+        public async Task<T> RunTestAsync<T>(TestSettings testSettings, VersionInfo versionInfo)
         {
-            var jsonResult = await _httpClient.PostAsync($"{BaseUrl}/test?action={testSettings.Action}&apikey={testSettings.ApiKey}", JsonSerialiser.Serialise(testSettings)).ConfigureAwait(false);
-
-            var jsonSettings = new JsonSerializerSettings
+            try
             {
-                Converters = new List<JsonConverter> { new CoverageConverter() }
-            };
+                string payload = GetPayload(testSettings, versionInfo);
 
-            var result = JsonConvert.DeserializeObject<T>(jsonResult, jsonSettings);
-            return result;
+                var jsonResult = await _httpClient.PostAsync($"{BaseUrl}/test?action={testSettings.Action}&apikey={testSettings.ApiKey}", payload).ConfigureAwait(false);
+
+                var jsonSettings = new JsonSerializerSettings
+                {
+                    Converters = new List<JsonConverter> { new CoverageConverter() }
+                };
+
+                var result = JsonConvert.DeserializeObject<T>(jsonResult, jsonSettings);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
-        public static List<T> DeserializeSingleOrList<T>(JsonReader jsonReader)
+        private static string GetPayload(TestSettings testSettings, VersionInfo versionInfo)
         {
-            if (jsonReader.Read())
-            {
-                switch (jsonReader.TokenType)
-                {
-                    case JsonToken.StartArray:
-                        return new JsonSerializer().Deserialize<List<T>>(jsonReader);
+            if(versionInfo?.HasVersion() == true)
+                return JsonSerialiser.Serialise(testSettings);
 
-                    case JsonToken.StartObject:
-                        var instance = new JsonSerializer().Deserialize<T>(jsonReader);
-                        return new List<T> { instance };
-                }
-            }
+            //For backwards compat...
+            if (testSettings.Action == Actions.GetVersion)
+                return String.Empty;
 
-            throw new InvalidOperationException("Unexpected JSON input");
+            //More backwards compat...
+            return testSettings.TestDataJson;
         }
     }
 }

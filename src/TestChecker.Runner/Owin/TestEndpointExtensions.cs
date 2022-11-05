@@ -16,11 +16,12 @@ namespace TestChecker.Runner
         public static void UseTestEndpoint<TData>(this IAppBuilder app, Assembly assembly, List<ITestCheckDependency> dependencies, Func<ITestChecks<TData>> testChecks, ILoggerFactory loggerFactory, IMethodNameExtractorService methodNameExtractorService = null, string readEnvironmentName = READ_ENVIRONMENT_NAME, string readWriteEnvironmentName = READ_WRITE_ENVIRONMENT_NAME) where TData : class
         {
             _methodNameExtractor = methodNameExtractorService ?? new MethodNameExtractorService();
+            _testCheckDependencyRunner = new TestCheckDependencyRunner(dependencies, loggerFactory.CreateLogger<TestCheckDependencyRunner>());
 
             try
             {
                 _logger = loggerFactory?.CreateLogger(typeof(TestEndpointExtensions).FullName);
-                var runner = new TestRunner<TData>(assembly, dependencies, testChecks, loggerFactory, GetEnvironmentVariable(readEnvironmentName), GetEnvironmentVariable(readWriteEnvironmentName));
+                var runner = new TestRunner<TData>(assembly, _testCheckDependencyRunner, testChecks, loggerFactory.CreateLogger<ITestChecks<TData>>(), GetEnvironmentVariable(readEnvironmentName), GetEnvironmentVariable(readWriteEnvironmentName));
 
                 app.Use(async (context, next) =>
                 {

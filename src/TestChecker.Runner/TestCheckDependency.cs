@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using TestChecker.Core;
 using TestChecker.Core.Enums;
@@ -11,6 +12,7 @@ namespace TestChecker.Runner
         private bool _isTestCheckStatic = false;
         private bool _hasTestCheckRun = false;
         private TestCheckSummary _testCheckResult;
+        private VersionInfo _versionInfo = null;
 
         /// <summary>
         /// Constructs the <see cref="TestCheckDependency"/>.
@@ -57,38 +59,39 @@ namespace TestChecker.Runner
         {            
             try
             {
-                return await Service.RunTestAsync<T>(testSettings).ConfigureAwait(false);
+                var versionInfo = testSettings.Action == Actions.GetVersion ? null : await GetVersionInfoAsync();
+                return await Service.RunTestAsync<T>(testSettings, versionInfo).ConfigureAwait(false);
             }
             catch(Exception ex)
             {
-                throw;
+                throw new Exception($"Unknown error with {Service?.GetType().FullName}", ex);
             }
         }
 
-        public async Task<TestCheckSummary> RunTestAsync(TestSettings testSettings)
-        {
-            //todo - Has to be dynamic??
-            //todo - Has to be dynamic??
-            //todo - Has to be dynamic??
-            //todo - Has to be dynamic??
+        //public async Task<TestCheckSummary> RunTestAsync(TestSettings testSettings)
+        //{
+        //    //todo - Has to be dynamic??
+        //    //todo - Has to be dynamic??
+        //    //todo - Has to be dynamic??
+        //    //todo - Has to be dynamic??
 
-            //Replace with the one above
-            //Replace with the one above
-            //Replace with the one above
+        //    //Replace with the one above
+        //    //Replace with the one above
+        //    //Replace with the one above
 
 
 
-            if (_isTestCheckStatic) return _testCheckResult;
+        //    if (_isTestCheckStatic) return _testCheckResult;
 
-            try
-            {
-                return await Service.RunTestAsync<TestCheckSummary>(testSettings).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                return new TestCheckSummary { System = TestCheckSummary.GetSystemString(Service.GetType().Assembly, Service.BaseUrl), ReadTestChecks = new TestCheck(null, ex) };
-            }
-        }
+        //    try
+        //    {
+        //        return await Service.RunTestAsync<TestCheckSummary>(testSettings, await GetVersionInfoAsync()).ConfigureAwait(false);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return new TestCheckSummary { System = TestCheckSummary.GetSystemString(Service.GetType().Assembly, Service.BaseUrl), ReadTestChecks = new TestCheck(null, ex) };
+        //    }
+        //}
 
         public async Task<List<NamedTestData>> GetTestDataAsync()
         {
@@ -103,6 +106,17 @@ namespace TestChecker.Runner
             {
                 return new List<NamedTestData> { new NamedTestData { FullName = Service?.GetType().FullName, TestData = ex.ToString() } };
             }
+        }
+
+        public async Task<VersionInfo> GetVersionInfoAsync()
+        {
+            if (_versionInfo == null)
+            {
+                var versionSettings = new TestSettings(new Uri(new Uri(Service.BaseUrl), TestEndpointExtensions.TEST_END_POINT).ToString(), Core.Enums.Actions.GetVersion);
+                _versionInfo = await RunTestActionAsync<VersionInfo>(versionSettings);
+            }
+
+            return _versionInfo;
         }
     }
 }

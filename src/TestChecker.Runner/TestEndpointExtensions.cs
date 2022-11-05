@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using TestChecker.Runner.Extensions;
 using TestChecker.Core.Serialisation;
 using TestChecker.Runner.Services;
+using TestChecker.Core.Enums;
 
 namespace TestChecker.Runner
 {
@@ -30,6 +31,7 @@ namespace TestChecker.Runner
         const string READ_WRITE_ENVIRONMENT_NAME = "TEST_READWRITE_SECURITY_TOKEN";
         
         private static IMethodNameExtractorService _methodNameExtractor;
+        private static ITestCheckDependencyRunner _testCheckDependencyRunner;
 
         public static void AddTestEndpoint(this IServiceCollection services)
         {
@@ -41,11 +43,13 @@ namespace TestChecker.Runner
             _methodNameExtractor = app.ApplicationServices.GetService<IMethodNameExtractorService>();
             if (_methodNameExtractor == null) throw new InvalidOperationException($"Call ServiceCollection.AppTestEndpoint() first");
 
-            var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-            var runner = new TestRunner<TData>(Assembly.GetEntryAssembly(), dependencies, testChecks, loggerFactory, GetEnvironmentVariable(readEnvironmentName), GetEnvironmentVariable(readWriteEnvironmentName));
+            _testCheckDependencyRunner = new TestCheckDependencyRunner(dependencies, app.ApplicationServices.GetRequiredService<ILogger<TestCheckDependencyRunner>>());
+
+            var runner = new TestRunner<TData>(Assembly.GetEntryAssembly(), _testCheckDependencyRunner, testChecks, app.ApplicationServices.GetRequiredService<ILogger<ITestChecks<TData>>>(), GetEnvironmentVariable(readEnvironmentName), GetEnvironmentVariable(readWriteEnvironmentName));
 
             try
             {
+                var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
                 _logger = loggerFactory?.CreateLogger(typeof(TestEndpointExtensions).FullName);
 
                 //use Actions, not a new endpoint
@@ -108,6 +112,9 @@ namespace TestChecker.Runner
         {
             var type = typeof(TData);
 
+            if (!type.IsPublic)
+                _logger?.LogWarning($"{type.FullName} isn't public");
+
             var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic).ToList();
             properties.ForEach(fe => _logger?.LogWarning($"{type.FullName}.{fe.Name} isn't public"));
         }
@@ -141,20 +148,22 @@ namespace TestChecker.Runner
         {
             var datas = await runner.GetTestDataAsync(null).ConfigureAwait(false);
 
-            //Future-proofing
-            var versionSettings = new TestSettings(TestEndpointExtensions.TEST_END_POINT, Core.Enums.Actions.GetVersion);
-            var versionsJson = await ExecuteTestsAsync<TData>(versionSettings, runner, url);
-            var versionsSummary = JsonConvert.DeserializeObject<VersionInfo>(versionsJson);
-
             //Get the function names
+            List<string> allNames = new List<string>();
             var nameSettings = new TestSettings(TestEndpointExtensions.TEST_END_POINT, Core.Enums.Actions.GetNames | Core.Enums.Actions.RunReadTests);
+
             var names = await ExecuteTestsAsync<TData>(nameSettings, runner, url);
             var namesSummary = JsonConvert.DeserializeObject<TestCheckSummary>(names);
-            IEnumerable<string> allNames = _methodNameExtractor.RetrieveMethodNames(namesSummary);
+            allNames.AddRange(_methodNameExtractor.RetrieveMethodNames(namesSummary));
 
-            var json = JsonSerialiser.Serialise(datas);
+            var dataJson = JsonSerialiser.Serialise(datas);
 
-            string result = GenerateHtml(settings, json, allNames, versionsSummary);
+            var versionInfo = new VersionInfo(true)
+            {
+                Dependencies = await _testCheckDependencyRunner.GetVersionInfoAsync()
+            };
+
+            string result = GenerateHtml(settings, dataJson, allNames, versionInfo);
             return result;
         }
 
