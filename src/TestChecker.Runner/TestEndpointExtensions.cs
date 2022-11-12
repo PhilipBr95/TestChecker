@@ -16,6 +16,7 @@ using TestChecker.Runner.Extensions;
 using TestChecker.Core.Serialisation;
 using TestChecker.Runner.Services;
 using TestChecker.Core.Enums;
+using TestChecker.Core.Models;
 
 namespace TestChecker.Runner
 {
@@ -149,12 +150,14 @@ namespace TestChecker.Runner
             var datas = await runner.GetTestDataAsync(null).ConfigureAwait(false);
 
             //Get the function names
-            List<string> allNames = new List<string>();
-            var nameSettings = new TestSettings(TestEndpointExtensions.TEST_END_POINT, Core.Enums.Actions.GetNames | Core.Enums.Actions.RunReadTests);
-
+            var nameSettings = new TestSettings(TestEndpointExtensions.TEST_END_POINT, Core.Enums.Actions.GetNames | Core.Enums.Actions.RunReadTests)
+            {
+                ApiKey = GetEnvironmentVariable(READ_WRITE_ENVIRONMENT_NAME) ?? GetEnvironmentVariable(READ_ENVIRONMENT_NAME)
+            };
+            
             var names = await ExecuteTestsAsync<TData>(nameSettings, runner, url);
-            var namesSummary = JsonConvert.DeserializeObject<TestCheckSummary>(names);
-            allNames.AddRange(_methodNameExtractor.RetrieveMethodNames(namesSummary));
+            var namesSummary = JsonConvert.DeserializeObject<TestCheckSummary>(names);            
+            var allMethodNames = _methodNameExtractor.RetrieveMethodNames(namesSummary);
 
             var dataJson = JsonSerialiser.Serialise(datas);
 
@@ -163,18 +166,40 @@ namespace TestChecker.Runner
                 Dependencies = await _testCheckDependencyRunner.GetVersionInfoAsync()
             };
 
-            string result = GenerateHtml(settings, dataJson, allNames, versionInfo);
+            string result = GenerateHtml(settings, dataJson, allMethodNames, versionInfo);
             return result;
         }
 
-        private static string GenerateHtml(TestSettings settings, string json, IEnumerable<string> methodNames, VersionInfo versionInfo)
+        private static string GenerateHtml(TestSettings settings, string json, IEnumerable<MethodName> methodNames, VersionInfo versionInfo)
         {
             string html = GetHtmlTemplate();
 
             html = html.Replace("@Model.VersionInfos", JsonSerialiser.Serialise(versionInfo));
             html = html.Replace("@Model.FormAction", settings.Path);
             html = html.Replace("@Model.TestData", json);
-            html = html.Replace("@Model.MethodNames", string.Join("<br />", methodNames.Select((s, i) => $"<input type='checkbox' name='testMethods' id='method{i}' value='{s}' checked /><label for='method{i}'>{s}</label>")));
+
+            var methodNamesHtml = "<div>";
+            var lastAssembly = methodNames.FirstOrDefault()?.AssemblyName;
+            var i = 0;
+            var alternate = false;
+
+            foreach (var methodName in methodNames)
+            {
+                if(lastAssembly != methodName.AssemblyName)
+                {
+                    alternate = !alternate;
+                    var css = alternate ? "alternateMethodName" : string.Empty;
+
+                    methodNamesHtml += $"</div><div class='assemblyChange {css}'>";
+                    lastAssembly = methodName.AssemblyName;
+                }
+
+                methodNamesHtml += $"<input type='checkbox' name='testMethods' id='method{i}' value='{methodName.FullName}' checked /><label for='method{i}'>{methodName}</label><br />";
+                i++;
+            };
+
+            methodNamesHtml += "</div>";
+            html = html.Replace("@Model.MethodNames", methodNamesHtml);
 
             return html.Replace("@Model.ApiKey", settings.ApiKey);
         }

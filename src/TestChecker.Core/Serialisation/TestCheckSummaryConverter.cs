@@ -24,7 +24,7 @@ namespace TestChecker.Core.Serialisation
             {
                 var deps = new List<TestCheckSummary>();
                 var dep = jObject["DependencyTestChecks"].ToObject<TestCheck>();
-                deps.Add(new TestCheckSummary { System = "Old Tests", ReadTestChecks = dep });
+                deps.Add(new TestCheckSummary { System = new SystemInfo { Name = "Old Tests" }, ReadTestChecks = dep });
 
                 //v1 - Not the best
                 var summary = new TestCheckSummary
@@ -32,7 +32,7 @@ namespace TestChecker.Core.Serialisation
                     DependencyTestChecks = deps,
                     ReadTestChecks = jObject["ReadTestChecks"].ToObject<TestCheck>(),
                     Success = jObject["Success"].Value<bool>(),
-                    System = jObject["System"].Value<string>(),
+                    System = SystemInfo.GenerateFrom(jObject["System"].Value<string>()),
                     TestCoverage = jObject["TestCoverage"].ToObject<Coverage>(),
                     TestData = null,    //Not the best
                     TestDate = jObject["TestDate"].Value<string>(),

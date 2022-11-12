@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TestChecker.Core;
+using TestChecker.Core.Extensions;
+using TestChecker.Core.Serialisation;
 
 namespace TestChecker.Runner
 {
@@ -21,7 +23,7 @@ namespace TestChecker.Runner
         {             
             if (Dependencies == null) return default;
 
-            var taskResults = new List<T>();
+            var results = new List<T>();
 
             foreach (var dependency in Dependencies)
             {
@@ -33,11 +35,25 @@ namespace TestChecker.Runner
 
                     if (versionInfo.HasAvailableAction(settings.Action))
                     {
-                        var taskResult = await dependency.RunTestActionAsync<T>(settings).ConfigureAwait(false);
-                        taskResults.Add(taskResult);
+                        var runResult = await dependency.RunTestActionAsync<T>(settings).ConfigureAwait(false);
+                        results.Add(runResult);
                     }
                     else
+                    {
                         _logger?.LogWarning($"Missing Action {settings.Action} for {dependency.Service.BaseUrl}");
+
+                        if(settings.Action.HasFlag(Core.Enums.Actions.GetNames))
+                        {                            
+                            results.Add((new TestCheckSummary 
+                            { 
+                                System = new SystemInfo { Name = versionInfo.System },
+                                ReadTestChecks = new TestCheck
+                                {
+                                    TestChecks = new List<TestCheck> { new TestCheck { Method = "*", Description = "[Unknown Methods]" } }
+                                }
+                            }).ConvertTo<T>()); //Minor Generics Hack :-)                            
+                        }
+                    }
                 }
                 catch(Exception ex)
                 {
@@ -46,7 +62,7 @@ namespace TestChecker.Runner
                 }
             }
             
-            return taskResults;
+            return results;
         }
 
         public async Task<List<NamedTestData>> GetTestDataAsync()

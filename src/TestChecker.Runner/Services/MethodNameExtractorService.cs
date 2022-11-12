@@ -3,39 +3,45 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TestChecker.Core;
+using TestChecker.Core.Models;
 
 namespace TestChecker.Runner.Services
 {
     internal class MethodNameExtractorService : IMethodNameExtractorService
     {
-        public IEnumerable<string> RetrieveMethodNames(TestCheckSummary testCheckSummary)
+        public IEnumerable<MethodName> RetrieveMethodNames(TestCheckSummary testCheckSummary)
         {
-            var names = new List<string>();
+            var methodNames = new List<MethodName>();
 
-            names.AddRange(testCheckSummary?.ReadTestChecks?.TestChecks?.SelectMany(s => RetrieveMethodNames(s)) ?? Enumerable.Empty<string>());
-            names.AddRange(testCheckSummary?.WriteTestChecks?.TestChecks?.SelectMany(s => RetrieveMethodNames(s)) ?? Enumerable.Empty<string>());
+            if(testCheckSummary.ReadTestChecks == null && testCheckSummary.WriteTestChecks == null)
+            {
+                //Looks like 
+            }
+
+            methodNames.AddRange(testCheckSummary?.ReadTestChecks?.TestChecks?.SelectMany(s => RetrieveMethodNames(testCheckSummary.System, s)) ?? Enumerable.Empty<MethodName>());
+            methodNames.AddRange(testCheckSummary?.WriteTestChecks?.TestChecks?.SelectMany(s => RetrieveMethodNames(testCheckSummary.System, s)) ?? Enumerable.Empty<MethodName>());
 
             if (testCheckSummary.DependencyTestChecks != null)
             {
                 foreach (var dependency in testCheckSummary.DependencyTestChecks)
                 {
-                    names.AddRange(RetrieveMethodNames(dependency));
+                    methodNames.AddRange(RetrieveMethodNames(dependency));
                 }
             }
 
-            return names.Distinct()
-                        .Where(w => string.IsNullOrWhiteSpace(w) == false);
+            return methodNames.Distinct()
+                        .Where(w => string.IsNullOrWhiteSpace(w.Method) == false);
         }
 
-        private IEnumerable<string> RetrieveMethodNames(TestCheck testCheck)
+        private IEnumerable<MethodName> RetrieveMethodNames(SystemInfo systemInfo, TestCheck testCheck)
         {
             if (testCheck == null)
-                return Enumerable.Empty<string>();
+                return Enumerable.Empty<MethodName>();
 
             if (testCheck.TestChecks.Any())
-                return testCheck?.TestChecks?.Select(s => s.Method ?? s.Description ?? null);
+                return testCheck?.TestChecks?.Select(s => new MethodName { AssemblyName = systemInfo.Name, Method = s.Method ?? s.Description });
 
-            return new List<string> { $"{testCheck.Method ?? testCheck.Description ?? null}" };
+            return new List<MethodName> { new MethodName { AssemblyName = systemInfo.Name, Method = testCheck.Method, Description = testCheck.Description ?? null } };
         }
     }
 }

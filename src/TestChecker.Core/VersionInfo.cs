@@ -11,20 +11,19 @@ namespace TestChecker.Core
 {    
     public class VersionInfo
     {
-        private const string NOT_AVAILABLE = "N/A";
-        public string TestVersion { get; set; } = NOT_AVAILABLE;
         public string System { get; set; } = NetSystem.Reflection.Assembly.GetEntryAssembly().FullName;
         public Actions AvailableActions { get; set; } = Actions.GetTestData | Actions.RunReadTests | Actions.RunWriteTests;   //Compat, default values
         public string Environment { get; set; } = NetSystem.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown";     //todo - bad
+        public Version TestCheckerVersion { get; set; } = null;
         public List<VersionInfo> Dependencies { get; set; } = new List<VersionInfo>();
-
+        
         public VersionInfo()
         {
         }
 
         public VersionInfo(bool getActions)
         {
-            TestVersion = typeof(VersionInfo).Assembly.GetName().Version.ToString();
+            TestCheckerVersion = typeof(VersionInfo).Assembly.GetName().Version;
 
             if (getActions)
             {
@@ -36,16 +35,16 @@ namespace TestChecker.Core
             }
         }
 
-        public bool HasVersion() => !TestVersion.Equals(NOT_AVAILABLE);
+        public bool HasVersion() => TestCheckerVersion != null;
 
-        public void AddDependencies(List<VersionInfo> dependencyVersions)
-        {
-            Dependencies.AddRange(dependencyVersions);
-        }
+        public void AddDependencies(List<VersionInfo> dependencyVersions) => Dependencies.AddRange(dependencyVersions);
 
-        public bool HasAvailableAction(Actions actions)
+        public bool HasAvailableAction(Actions actions) => AvailableActions.HasFlag(actions);
+
+        public void FixData()
         {
-            return AvailableActions.HasFlag(actions);
+            var sections = System.Split(',');
+            System = sections[0];
         }
     }
 }

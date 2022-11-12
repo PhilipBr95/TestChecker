@@ -1,4 +1,5 @@
 ﻿using TestChecker.Core;
+using TestChecker.Core.Enums;
 using TestChecker.Runner;
 using WebApplicationChild;
 using WebApplicationChild.Models;

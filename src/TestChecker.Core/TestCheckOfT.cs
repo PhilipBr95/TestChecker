@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
+using TestChecker.Core.Enums;
 using TestChecker.Core.Serialisation;
 
 namespace TestChecker.Core

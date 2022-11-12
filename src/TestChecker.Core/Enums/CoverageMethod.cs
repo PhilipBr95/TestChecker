@@ -1,4 +1,4 @@
-﻿namespace TestChecker.Core
+﻿namespace TestChecker.Core.Enums
 {
     public enum CoverageMethod
     {

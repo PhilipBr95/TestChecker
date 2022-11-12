@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using TestChecker.Core;
+using TestChecker.Core.Models;
 
 namespace TestChecker.Runner.Services
 {
     public interface IMethodNameExtractorService
     {
-        IEnumerable<string> RetrieveMethodNames(TestCheckSummary testCheckSummary);
+        IEnumerable<MethodName> RetrieveMethodNames(TestCheckSummary testCheckSummary);
     }
 }

@@ -16,6 +16,8 @@ internal class MyTestChecks : ITestChecks<MyTestData>
     {
         var tests = new TestCheck("Read Tests", getNames);
         tests.TestIsTrue("Test Surname", () => { return _testData.Surname == "Smith"; });
+        tests.TestIsTrue("HasName", () => { return _testData.Surname == "Smith"; });
+        tests.TestIsTrue("GetMyName", () => { return _testData.Surname == "Smith"; });
 
         return Task.FromResult(tests);
     }
