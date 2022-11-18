@@ -6,12 +6,39 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using TestChecker.Core.Enums;
 using TestChecker.Core.Serialisation;
 
 namespace TestChecker.Core
 {
+    public partial class TestCheck
+    {
+        public static TestSettings DefaultTestSettings = null;
+
+        public static bool GetNamesOnly => DefaultTestSettings?.Action.HasFlag(Actions.GetNames) == true;
+
+        public bool RunTest(string method)
+        {
+            if (DefaultTestSettings == null) 
+                return true;
+
+            if (GetNamesOnly)
+            {
+                Add(new TestCheck() { Method = method }, true);
+                return false;
+            }
+
+            if (DefaultTestSettings.HasTestMethods())
+            {
+                return DefaultTestSettings.TestMethods.Contains(method);
+            }
+
+            return true;
+        }
+    }
+
     [DebuggerDisplay("Object = {ObjectName}, Method = {Method}")]
-    public class TestCheck
+    public partial class TestCheck
     {
 
         [JsonProperty("Object", Order =-20)]
@@ -28,7 +55,6 @@ namespace TestChecker.Core
 
         private string _returnValue = null;
         private bool _hasReturnValue = false;
-        internal bool _getNames;
 
         [JsonProperty(NullValueHandling = NullValueHandling.Include, Order = -13)]
         public string ReturnValue
@@ -51,14 +77,14 @@ namespace TestChecker.Core
 
         public List<TestCheck> TestChecks { get; set; } = new List<TestCheck>();
 
+
         public TestCheck()
         {
         }
 
-        public TestCheck(string description, bool getNames)
+        public TestCheck(string description)
         {
             Description = description;
-            _getNames = getNames;
         }
 
         public TestCheck(string description, string returnValue, bool success)
@@ -142,8 +168,8 @@ namespace TestChecker.Core
         }
 
         public TestCheck TestIsTrue(string description, Func<bool> functionToTest)
-        {
-            if (_getNames) return GetNameTestCheck(description);
+        {         
+            if (!RunTest(description)) return this;
 
             try
             {
@@ -161,7 +187,7 @@ namespace TestChecker.Core
 
         public async Task<TestCheck> TestIsTrueAsync(string description, Func<Task<bool>> functionToTest)
         {
-            if (_getNames) return GetNameTestCheck(description);
+            if (!RunTest(description)) return this;
 
             try
             {
@@ -220,11 +246,6 @@ namespace TestChecker.Core
         public async static Task<TestCheck> NotImplementedAsync(string objectName)
         {
             return await Task.FromResult(NotImplemented(objectName)).ConfigureAwait(false);
-        }
-        private TestCheck GetNameTestCheck(string method)
-        {
-            Add(new TestCheck() { Method = method }, true);
-            return this;
         }
     }
 }

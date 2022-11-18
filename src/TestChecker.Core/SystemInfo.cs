@@ -1,10 +1,13 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using TestChecker.Core.Serialisation.Converters;
 
 namespace TestChecker.Core
 {
+    [JsonConverter(typeof(SystemInfoConverter))]
     [DebuggerDisplay("{Name}")]
     public class SystemInfo
     {

@@ -53,21 +53,6 @@ namespace TestChecker.Runner
                 var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
                 _logger = loggerFactory?.CreateLogger(typeof(TestEndpointExtensions).FullName);
 
-                //use Actions, not a new endpoint
-                //use Actions, not a new endpoint
-                //use Actions, not a new endpoint
-
-                //app.Map(TESTINFO_END_POINT, appBuilder =>
-                //{
-                //    appBuilder.Run(async (context) =>
-                //    {
-                //        string json = JsonConvert.SerializeObject(new Info(), _jsonSettings);
-
-                //        context.Response.ContentType = "application/json";
-                //        await context.Response.WriteAsync(json).ConfigureAwait(false);
-                //    });
-                //});
-
                 app.Use(async (context, next) =>
                 {
                     if (context.Request.Path.Value.Equals(TESTDATA_END_POINT, StringComparison.CurrentCultureIgnoreCase))
@@ -88,9 +73,11 @@ namespace TestChecker.Runner
                     }
                     else if (context.Request.Path.Value.Equals(TEST_END_POINT, StringComparison.CurrentCultureIgnoreCase))
                     {
-                        CheckTData<TData>();
+                        CheckTData<TData>();                        
 
                         var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
+
+                        TestCheck.DefaultTestSettings = settings;
                         string json = await ExecuteTestsAsync(settings, runner, context.Request.GetUrl()).ConfigureAwait(false);
 
                         context.Response.ContentType = "application/json";

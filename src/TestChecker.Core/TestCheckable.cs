@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TestChecker.Core.Serialisation;
 using TestChecker.Core.Enums;
-using TestChecker.Core.ContractResolver;
 using System;
 using System.IO;
+using TestChecker.Core.Serialisation.Converters;
 
 namespace TestChecker.Core
 {

@@ -18,6 +18,9 @@ namespace TestChecker.Runner
             var path = GetTestEndPoint(request.PathBase.Value, request.Path.Value);
 
             var formData = await request.ReadFormAsync().ConfigureAwait(false);
+
+            var testMethodsData = formData.Get("TestMethods");
+            var testMethods = string.IsNullOrWhiteSpace(testMethodsData) ? default : testMethodsData.Split(',');
             var testDataJson = formData.Get("TestData");
 
             if (string.IsNullOrWhiteSpace(apiKey))
@@ -26,7 +29,7 @@ namespace TestChecker.Runner
             if (string.IsNullOrWhiteSpace(action))
                 action = formData.Get("Action");
 
-            return new TestSettings(path, apiKey, testDataJson, GetAction(action, request.Path.Value));
+            return new TestSettings(path, apiKey, testDataJson, GetAction(action, request.Path.Value), testMethods);
         }
     }
 }

@@ -25,12 +25,10 @@ namespace TestChecker.Core
 
         private IObjectSerialiser ObjectSerialiser { get; set; }
 
-        //public TData TestData => _testData;
-
         [JsonIgnore]
         public T Object => _obj;
 
-        public TestCheck(T obj, TData testData, CoverageMethod coverageMethod, ILogger logger, bool getNames, IObjectSerialiser objectSerialiser = null) : base()
+        public TestCheck(T obj, TData testData, CoverageMethod coverageMethod, ILogger logger, IObjectSerialiser objectSerialiser = null) : base()
         {            
             if (!typeof(T).IsInterface)
                 throw new ArgumentException("T must be an interface in x = new TestCheck<T....");
@@ -38,8 +36,6 @@ namespace TestChecker.Core
             _testData = testData;
             _coverageMethod = coverageMethod;
             _logger = logger;
-            _getNames = getNames;
-
             ObjectName = typeof(T).FullName;
             ObjectSerialiser = objectSerialiser ?? new ObjectSerialiser(logger);
 
@@ -51,7 +47,7 @@ namespace TestChecker.Core
 
         public async Task<TestCheck<T, TData>> TestIsObjectAsync<TOut>(string description, Func<T, TData, Task<TOut>> functionToTest, int maxDepth = 1)
         {
-            if (_getNames) return GetNameTestCheck(description);
+            if (!RunTest(description)) return this;
 
             try
             {
@@ -77,7 +73,7 @@ namespace TestChecker.Core
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
             string method = GetMethodName(methodCallExpression);
 
-            if (_getNames) return GetNameTestCheck(method);
+            if (!RunTest(method)) return this;
 
             try
             {
@@ -105,7 +101,7 @@ namespace TestChecker.Core
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
             string method = GetMethodName(methodCallExpression);
 
-            if (_getNames) return GetNameTestCheck(method);
+            if (!RunTest(method)) return this;
 
             try
             {
@@ -139,7 +135,7 @@ namespace TestChecker.Core
             var method = GetEndPointName<TOut>(functionToTest);
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
 
-            if (_getNames) return GetNameTestCheck(method);
+            if (!RunTest(method)) return this;
 
             try
             {
@@ -164,7 +160,7 @@ namespace TestChecker.Core
 
         public TestCheck<T, TData> TestIsObject<TOut>(string description, Func<T, TData, TOut> functionToTest, int maxDepth = 1)
         {
-            if (_getNames) return GetNameTestCheck(description);
+            if (!RunTest(description)) return this;
 
             try
             {                
@@ -186,7 +182,7 @@ namespace TestChecker.Core
 
         public TestCheck<T, TData> TestIsObject<TOut>(string description, Func<T, TOut> functionToTest, int maxDepth = 1)
         {
-            if (_getNames) return GetNameTestCheck(description);
+            if (!RunTest(description)) return this;
 
             try
             {
@@ -211,7 +207,7 @@ namespace TestChecker.Core
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
             string method = GetMethodName(methodCallExpression);
 
-            if (_getNames) return GetNameTestCheck(method);
+            if (!RunTest(method)) return this;
 
             try
             {
@@ -235,7 +231,7 @@ namespace TestChecker.Core
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
             string method = GetMethodName(methodCallExpression);
 
-            if (_getNames) return GetNameTestCheck(method);
+            if (!RunTest(method)) return this;
 
             try
             {
@@ -258,7 +254,7 @@ namespace TestChecker.Core
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
             string method = GetMethodName(methodCallExpression);
 
-            if (_getNames) return GetNameTestCheck(method);
+            if (!RunTest(method)) return this;
 
             try
             {
@@ -278,7 +274,7 @@ namespace TestChecker.Core
 
         public TestCheck<T, TData> TestIsTrue(string description, Func<TData, bool> functionToTest)
         {
-            if (_getNames) return GetNameTestCheck(description);
+            if (!RunTest(description)) return this;
 
             try
             {
@@ -297,7 +293,7 @@ namespace TestChecker.Core
 
         public TestCheck<T, TData> TestIsTrue(string description, Func<T, TData, bool> functionToTest)
         {
-            if (_getNames) return GetNameTestCheck(description);
+            if (!RunTest(description)) return this;
 
             try
             {
@@ -316,7 +312,7 @@ namespace TestChecker.Core
 
         public async Task<TestCheck<T, TData>> TestIsTrueAsync(string description, Func<T, TData, Task<bool>> functionToTest)
         {
-            if (_getNames) return GetNameTestCheck(description);
+            if (!RunTest(description)) return this;
 
             try
             {
@@ -335,7 +331,7 @@ namespace TestChecker.Core
 
         public async Task<TestCheck<T, TData>> TestIsTrueAsync(string description, Func<TData, Task<bool>> functionToTest)
         {
-            if (_getNames) return GetNameTestCheck(description);
+            if (!RunTest(description)) return this;
 
             try
             {

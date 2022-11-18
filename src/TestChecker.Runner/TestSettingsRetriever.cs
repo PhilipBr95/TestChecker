@@ -24,6 +24,8 @@ namespace TestChecker.Runner
             if (request.HasFormContentType)
             {
                 //Used on the TestUI form
+                
+                request.Form.TryGetValue("TestMethods", out StringValues testMethods);
                 request.Form.TryGetValue("TestData", out StringValues testDataJson);
 
                 if (string.IsNullOrWhiteSpace(apiKey))
@@ -32,7 +34,7 @@ namespace TestChecker.Runner
                 if (string.IsNullOrWhiteSpace(action))
                     request.Form.TryGetValue("Action", out action);
 
-                return new TestSettings(path, apiKey, testDataJson, GetAction(action, request.Path));
+                return new TestSettings(path, apiKey, testDataJson, GetAction(action, request.Path), testMethods);
             }
             else
             {

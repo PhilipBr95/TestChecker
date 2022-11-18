@@ -20,11 +20,11 @@ internal class MyTestChecks : ITestChecks<MyTestData>
         return _testData;
     }
 
-    public Task<TestCheck> RunReadTestsAsync(bool getNames)
+    public Task<TestCheck> RunReadTestsAsync()
     {
-        var tests = new TestCheck("RunReadTestsAsync Tests", getNames);
+        var tests = new TestCheck("RunReadTestsAsync Tests");
         
-        var testController = new TestCheck<IFakeController, MyTestData>(_fakeController, _testData, CoverageMethod.MethodsOnly, null, getNames);
+        var testController = new TestCheck<IFakeController, MyTestData>(_fakeController, _testData, CoverageMethod.MethodsOnly, null);
         testController.TestIsTrue((obj, data) => obj.GetData(data.Town));
         testController.TestIsObject((obj, data) => obj.GetData(data.Town));
         testController.TestIsObject((obj, data) => obj.GetDateTime(data.City));

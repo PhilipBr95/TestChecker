@@ -3,8 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using System.Text;
-using TestChecker.Core.Serialisation;
+using TestChecker.Core.Serialisation.Converters;
 
 namespace TestChecker.Core
 {

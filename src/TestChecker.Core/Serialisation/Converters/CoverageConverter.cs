@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace TestChecker.Core.Serialisation
+namespace TestChecker.Core.Serialisation.Converters
 {
     internal class CoverageConverter : JsonConverter
     {

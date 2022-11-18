@@ -4,8 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-//[assembly: InternalsVisibleTo("TestChecker.Runner.Tests")]
-namespace TestChecker.Core.Serialisation
+namespace TestChecker.Core.Serialisation.Converters
 {
     internal class TestCheckSummaryConverter : JsonConverter
     {

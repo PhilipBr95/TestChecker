@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System;
-using TestChecker.Core.Serialisation;
+using TestChecker.Core.Serialisation.Converters;
 
 namespace TestChecker.Core.Enums
 {

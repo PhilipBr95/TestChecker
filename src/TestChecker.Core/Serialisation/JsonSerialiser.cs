@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using TestChecker.Core.Serialisation.Converters;
 
 namespace TestChecker.Core.Serialisation
 {

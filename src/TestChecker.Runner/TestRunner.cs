@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TestChecker.Core;
 using TestChecker.Core.Enums;
+using TestChecker.Core.Serialisation.Converters;
 using TestChecker.Runner.Extensions;
 
 //[assembly: InternalsVisibleTo("TestChecker.Runner.Tests, PublicKey=4c452e3bb169baa8")]
@@ -80,7 +81,7 @@ namespace TestChecker.Runner
 
                     try
                     {
-                        readTestChecks = await testChecks.RunReadTestsAsync(settings.Action.HasGetNames()).ConfigureAwait(false);
+                        readTestChecks = await testChecks.RunReadTestsAsync().ConfigureAwait(false);
                     }
                     catch (NotImplementedException notEx)
                     {
@@ -163,7 +164,7 @@ namespace TestChecker.Runner
                                 _logger?.LogDebug($"Found TestData {value.ToString()}");
 
                                 var serialiser = new JsonSerializer();
-                                serialiser.Converters.Add(new Core.Serialisation.MemoryStreamJsonConverter());
+                                serialiser.Converters.Add(new MemoryStreamJsonConverter());
 
                                 var tData = (TData)value.ToObject(typeof(TData), serialiser);
                                 return tData;

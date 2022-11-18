@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using TestChecker.Core.Enums;
 
-namespace TestChecker.Core.Serialisation
+namespace TestChecker.Core.Serialisation.Converters
 {
     public class FlagConverter<T> : JsonConverter where T : Enum
     {

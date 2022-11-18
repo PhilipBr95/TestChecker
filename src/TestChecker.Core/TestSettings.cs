@@ -12,18 +12,21 @@ namespace TestChecker.Core
         public dynamic TestData => Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(TestDataJson ?? String.Empty);
         public Actions Action { get; set; }
         public string Path { get; set; }
+        public string[] TestMethods { get; set; }
+        public static TestSettings DefaultTestSettings { get; set; }
 
         public TestSettings()
         {
 
         }
 
-        public TestSettings(string path, string apiKey, string testDataJson, Actions actions)
+        public TestSettings(string path, string apiKey, string testDataJson, Actions actions, string[] testMethods)
         {
             Path = path;
             ApiKey = apiKey;
             TestDataJson = testDataJson;
             Action = actions;
+            TestMethods = testMethods;
         }
         public TestSettings(string path, Actions actions)
         {
@@ -31,9 +34,8 @@ namespace TestChecker.Core
             Action = actions;
         }
 
-        public bool HasTestData()
-        {
-            return !string.IsNullOrWhiteSpace(TestDataJson);
-        }
+        public bool HasTestData() => !string.IsNullOrWhiteSpace(TestDataJson);
+        public bool HasTestMethods() => TestMethods?.Length > 0;
+
     }
 }

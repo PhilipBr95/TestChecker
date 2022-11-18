@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace TestChecker.Core.Serialisation
+namespace TestChecker.Core.Serialisation.Converters
 {
     public class MemoryStreamJsonConverter : JsonConverter
     {

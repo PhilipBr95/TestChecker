@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using TestChecker.Core;
-using TestChecker.Runner;
 
 namespace TestChecker.Runner.Tests
 {
@@ -18,7 +17,7 @@ namespace TestChecker.Runner.Tests
             return _testData;
         }
 
-        public Task<TestCheck> RunReadTestsAsync(bool getNames)
+        public Task<TestCheck> RunReadTestsAsync()
         {
             throw new System.NotImplementedException();
         }

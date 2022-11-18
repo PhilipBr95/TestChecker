@@ -12,9 +12,9 @@ internal class MyTestChecks : ITestChecks<MyTestData>
         return _testData;
     }
 
-    public Task<TestCheck> RunReadTestsAsync(bool getNames)
+    public Task<TestCheck> RunReadTestsAsync()
     {
-        var tests = new TestCheck("Read Tests", getNames);
+        var tests = new TestCheck("Read Tests");
         tests.TestIsTrue("Test Surname", () => { return _testData.Surname == "Smith"; });
         tests.TestIsTrue("HasName", () => { return _testData.Surname == "Smith"; });
         tests.TestIsTrue("GetMyName", () => { return _testData.Surname == "Smith"; });
