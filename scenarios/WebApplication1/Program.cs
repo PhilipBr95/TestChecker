@@ -29,7 +29,8 @@ app.MapRazorPages();
 
 app.UseTestEndpoint<MyTestData>(new List<ITestCheckDependency> { 
     new TestCheckDependency(new WebApplicationChildClient.ChildClient("https://localhost:7254")),
-    new TestCheckDependency(new WebApplicationOldChildClient.OldChildClient("https://localhost:7291"))}, 
+    new TestCheckDependency(new WebApplicationOldChildClient.OldChildClient("https://localhost:7291"))
+    }, 
     () => new MyTestChecks());
 
 app.Run();

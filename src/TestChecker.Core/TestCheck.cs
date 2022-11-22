@@ -5,38 +5,13 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 using TestChecker.Core.Enums;
 using TestChecker.Core.Serialisation;
 
 namespace TestChecker.Core
 {
-    public partial class TestCheck
-    {
-        public static TestSettings DefaultTestSettings = null;
-
-        public static bool GetNamesOnly => DefaultTestSettings?.Action.HasFlag(Actions.GetNames) == true;
-
-        public bool RunTest(string method)
-        {
-            if (DefaultTestSettings == null) 
-                return true;
-
-            if (GetNamesOnly)
-            {
-                Add(new TestCheck() { Method = method }, true);
-                return false;
-            }
-
-            if (DefaultTestSettings.HasTestMethods())
-            {
-                return DefaultTestSettings.TestMethods.Contains(method);
-            }
-
-            return true;
-        }
-    }
-
     [DebuggerDisplay("Object = {ObjectName}, Method = {Method}")]
     public partial class TestCheck
     {

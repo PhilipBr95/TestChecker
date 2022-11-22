@@ -56,6 +56,7 @@ namespace TestChecker.Core
 
         public Coverage(List<Coverage> list)
         {
+            fix coverage
             Hits = list.Where(w => w?.Hits != null).SelectMany(s => s.Hits).Distinct().ToList();
             Total = list.Where(w => w?.Total != null).SelectMany(s => s.Total).Distinct().ToList();
 

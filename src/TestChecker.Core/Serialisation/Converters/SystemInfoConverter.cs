@@ -8,21 +8,16 @@ namespace TestChecker.Core.Serialisation.Converters
     {
         public override SystemInfo ReadJson(JsonReader reader, Type objectType, SystemInfo existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var token = (reader as JTokenReader).CurrentToken;            
-
-            if(token.HasValues)
-            { 
-                JObject jObject = JObject.Load(reader);
-                
-                var systemInfo = new SystemInfo();
-                serializer.Populate(jObject.CreateReader(), systemInfo);
-                return systemInfo;
-            }
-            else
+            if (reader.TokenType == JsonToken.String)
             {
                 //Old json
-                return new SystemInfo { Name = token.ToString() };
+
+                return SystemInfo.CreateFrom(reader.Value.ToString());
             }
+
+            var systemInfo = new SystemInfo();
+            serializer.Populate(reader, systemInfo);
+            return systemInfo;
         }
 
         public override bool CanWrite { get { return false; } }

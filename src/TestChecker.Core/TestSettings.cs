@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using TestChecker.Core.Enums;
 
@@ -35,7 +36,10 @@ namespace TestChecker.Core
         }
 
         public bool HasTestData() => !string.IsNullOrWhiteSpace(TestDataJson);
-        public bool HasTestMethods() => TestMethods?.Length > 0;
-
+        public bool HasTestMethods(string assemblyName)
+        {
+            var tests = TestMethods?.Where(w => w.StartsWith(assemblyName));
+            return tests?.Any() ?? true;
+        }       
     }
 }

@@ -35,8 +35,11 @@ namespace TestChecker.Runner
 
                     if (versionInfo.HasAvailableAction(settings.Action))
                     {
-                        var runResult = await dependency.RunTestActionAsync<T>(settings).ConfigureAwait(false);
-                        results.Add(runResult);
+                        if (settings.HasTestMethods(versionInfo.System.Name))
+                        {
+                            var runResult = await dependency.RunTestActionAsync<T>(settings).ConfigureAwait(false);
+                            results.Add(runResult);
+                        }
                     }
                     else
                     {
@@ -46,7 +49,7 @@ namespace TestChecker.Runner
                         {                            
                             results.Add((new TestCheckSummary 
                             { 
-                                System = new SystemInfo { Name = versionInfo.System },
+                                System = versionInfo.System,
                                 ReadTestChecks = new TestCheck
                                 {
                                     TestChecks = new List<TestCheck> { new TestCheck { Method = "*", Description = "[Unknown Methods]" } }

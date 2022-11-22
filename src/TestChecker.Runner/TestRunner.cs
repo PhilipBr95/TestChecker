@@ -37,6 +37,9 @@ namespace TestChecker.Runner
 
         public async Task<dynamic> HandleRequestAsync(TestSettings settings, string url)
         {
+            //Reset the current settings config
+            TestCheck.SetTestSetting(_assembly, settings);
+
             ITestChecks<TData> testChecks = _testChecks();            
 
             if (settings.HasTestData())
@@ -81,7 +84,8 @@ namespace TestChecker.Runner
 
                     try
                     {
-                        readTestChecks = await testChecks.RunReadTestsAsync().ConfigureAwait(false);
+                        if(settings.HasTestMethods(_assembly.GetName().Name))
+                            readTestChecks = await testChecks.RunReadTestsAsync().ConfigureAwait(false);
                     }
                     catch (NotImplementedException notEx)
                     {
@@ -101,7 +105,8 @@ namespace TestChecker.Runner
 
                 try
                 {
-                    writeTestChecks = await testChecks.RunWriteTestsAsync().ConfigureAwait(false);
+                    if (settings.HasTestMethods(_assembly.GetName().Name))
+                        writeTestChecks = await testChecks.RunWriteTestsAsync().ConfigureAwait(false);
                 }
                 catch(NotImplementedException notEx)
                 {

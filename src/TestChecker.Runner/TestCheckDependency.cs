@@ -114,9 +114,6 @@ namespace TestChecker.Runner
             {
                 var versionSettings = new TestSettings(new Uri(new Uri(Service.BaseUrl), TestEndpointExtensions.TEST_END_POINT).ToString(), Core.Enums.Actions.GetVersion);
                 _versionInfo = await RunTestActionAsync<VersionInfo>(versionSettings);
-
-                if(!_versionInfo.HasAvailableAction(Actions.GetVersion))
-                    _versionInfo.FixData();
             }
 
             return _versionInfo;

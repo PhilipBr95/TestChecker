@@ -31,7 +31,7 @@ namespace TestChecker.Core.Serialisation.Converters
                     DependencyTestChecks = deps,
                     ReadTestChecks = jObject["ReadTestChecks"].ToObject<TestCheck>(),
                     Success = jObject["Success"].Value<bool>(),
-                    System = SystemInfo.GenerateFrom(jObject["System"].Value<string>()),
+                    System = SystemInfo.CreateFrom(jObject["System"].Value<string>()),
                     TestCoverage = jObject["TestCoverage"].ToObject<Coverage>(),
                     TestData = null,    //Not the best
                     TestDate = jObject["TestDate"].Value<string>(),

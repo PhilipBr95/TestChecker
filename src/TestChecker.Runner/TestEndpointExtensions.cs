@@ -75,9 +75,7 @@ namespace TestChecker.Runner
                     {
                         CheckTData<TData>();                        
 
-                        var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
-
-                        TestCheck.DefaultTestSettings = settings;
+                        var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);                        
                         string json = await ExecuteTestsAsync(settings, runner, context.Request.GetUrl()).ConfigureAwait(false);
 
                         context.Response.ContentType = "application/json";

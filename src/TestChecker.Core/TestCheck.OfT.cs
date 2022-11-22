@@ -2,18 +2,14 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net;
-using System.Reflection;
 using System.Threading.Tasks;
 using TestChecker.Core.Enums;
 using TestChecker.Core.Serialisation;
 
 namespace TestChecker.Core
-{    
+{
     public partial class TestCheck<T,TData> : TestCheck where T : class 
                                                 where TData : class
     {        

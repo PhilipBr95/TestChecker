@@ -1,8 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
+using System.Linq;
 using TestChecker.Core.Serialisation.Converters;
 
 namespace TestChecker.Core
@@ -15,8 +14,19 @@ namespace TestChecker.Core
         public Version Version { get; set; }
         public string Url { get; set; }
 
-        internal static SystemInfo GenerateFrom(string systemInfoString)
+        internal static SystemInfo Create(string url = null)
         {
+            var assemblyName = System.Reflection.Assembly.GetEntryAssembly().GetName();
+            return new SystemInfo { Name = assemblyName.Name, Version = assemblyName.Version, Url = url };
+        }
+
+        internal static SystemInfo CreateFrom(string systemInfoString)
+        {
+            var splits = systemInfoString.Split(new string[] { ", " }, StringSplitOptions.None);
+
+            if(splits.Any())
+                return new SystemInfo { Name = splits[0] };
+
             return new SystemInfo { Name = systemInfoString };
         }
     }
