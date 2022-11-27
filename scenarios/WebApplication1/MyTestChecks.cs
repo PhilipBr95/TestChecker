@@ -1,7 +1,21 @@
-﻿using TestChecker.Core;
+﻿using Microsoft.AspNetCore.Mvc;
+using TestChecker.Core;
+using TestChecker.Core.Enums;
 using TestChecker.Runner;
 using WebApplication1;
 namespace WebApplication1;
+
+internal interface IMyController
+{
+    bool Test(string surname);
+}
+internal class MyController : IMyController
+{
+    public bool Test(string surname)
+    {
+        return surname == "Smith";
+    }
+}
 
 internal class MyTestChecks : ITestChecks<MyTestData>
 {
@@ -14,12 +28,15 @@ internal class MyTestChecks : ITestChecks<MyTestData>
 
     public Task<TestCheck> RunReadTestsAsync()
     {
-        var tests = new TestCheck("Read Tests");
-        tests.TestIsTrue("Test Surname", () => { return _testData.Surname == "Smith"; });
-        tests.TestIsTrue("HasName", () => { return _testData.Surname == "Smith"; });
-        tests.TestIsTrue("GetMyName", () => { return _testData.Surname == "Smith"; });
+        var readTests = new TestCheck("Read Tests");
+        var tests = new TestCheck<IMyController, MyTestData>(new MyController(), _testData, CoverageMethod.MethodsOnly, null);
+        tests.TestIsTrue(x => x.Test(_testData.Surname));
 
-        return Task.FromResult(tests);
+        readTests.Add(tests);
+        readTests.TestIsTrue("HasName", () => { return _testData.Surname == "Smith"; });
+        readTests.TestIsTrue("GetMyName", () => { return _testData.Surname == "Smith"; });
+
+        return Task.FromResult(readTests);
     }
 
     public Task<TestCheck> RunWriteTestsAsync()

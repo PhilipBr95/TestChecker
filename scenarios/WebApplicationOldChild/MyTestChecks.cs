@@ -4,6 +4,19 @@ using TestChecker.Runner;
 
 namespace WebApplicationOldChild
 {
+    public interface IMyTests
+    {
+        bool TestName(string name);
+    }
+
+    public class MyTests : IMyTests
+    {
+        public bool TestName(string name)
+        {
+            return "OldBriggs" == name;
+        }
+    }
+
     internal class MyTestChecks : ITestChecks<MyTestData>
     {
         private MyTestData _testData { get; set; } = new MyTestData { OldSurname = "OldBriggs" };
@@ -15,10 +28,13 @@ namespace WebApplicationOldChild
 
         public Task<TestCheck> RunReadTestsAsync()
         {
-            var tests = new TestCheck("RunReadTestsAsync Tests");
-            tests.TestIsTrue("OldSurname == OldBriggs", () => _testData.OldSurname == "OldBriggs");
+            var controller = new MyTests();
+            var allTests = new TestCheck("All Tests");
+            var tests = new TestCheck<IMyTests, MyTestData>(controller, _testData, CoverageMethod.MethodsOnly, null);
+            tests.TestIsTrue(x => x.TestName(_testData.OldSurname));
+            allTests.Add(tests);
 
-            return Task.FromResult(tests);
+            return Task.FromResult(allTests);
         }
 
         public Task<TestCheck> RunWriteTestsAsync()
