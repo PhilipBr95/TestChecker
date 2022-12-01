@@ -134,10 +134,15 @@ namespace TestChecker.Runner
             if (readTestChecks?.Success != null || writeTestChecks?.Success != null || dependencyTestChecks?.IsSuccess() != null)
                 success = (readTestChecks?.Success ?? true) && (writeTestChecks?.Success ?? true) && (dependencyTestChecks?.IsSuccess() ?? true);
 
+            long successCount = (readTestChecks?.SuccessCount ?? 0) + 
+                                (writeTestChecks?.SuccessCount ?? 0) +
+                                dependencyTestChecks?.Sum(s => s.GetSuccessCount()) ?? 0;
+
             return new TestCheckSummary
             {
                 System = TestCheckSummary.GetSystemString(_assembly, url),
                 Success = success,
+                SuccessCount = successCount,
                 TestCoverage = coverage,
                 ReadTestChecks = readTestChecks,
                 WriteTestChecks = writeTestChecks,

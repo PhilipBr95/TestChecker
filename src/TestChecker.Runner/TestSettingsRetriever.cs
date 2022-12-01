@@ -47,7 +47,7 @@ namespace TestChecker.Runner
                 }
             }
 
-            return new TestSettings(path, GetAction(action, request.Path));
+            return new TestSettings(path, GetAction(action, request.Path)) { ApiKey = apiKey };
         }        
 
         private static string GetTestEndPoint(string pathBase, string path)

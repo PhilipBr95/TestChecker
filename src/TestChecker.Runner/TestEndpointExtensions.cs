@@ -161,6 +161,7 @@ namespace TestChecker.Runner
 
             html = html.Replace("@Model.VersionInfos", JsonSerialiser.Serialise(versionInfo));
             html = html.Replace("@Model.FormAction", settings.Path);
+            html = html.Replace("@Model.ApiKey", settings.ApiKey);
             html = html.Replace("@Model.TestData", json);
 
             var methodNamesHtml = "<div>";
@@ -185,8 +186,7 @@ namespace TestChecker.Runner
 
             methodNamesHtml += "</div>";
             html = html.Replace("@Model.MethodNames", methodNamesHtml);
-
-            return html.Replace("@Model.ApiKey", settings.ApiKey);
+            return html;
         }
 
         private static string GetHtmlTemplate()

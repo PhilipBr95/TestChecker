@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using TestChecker.Core.Serialisation.Converters;
 
@@ -14,6 +15,7 @@ namespace TestChecker.Core
     {
         public SystemInfo System { get; set; }
         public bool? Success { get; set; }
+        public long? SuccessCount { get; set; }
         public Coverage TestCoverage { get; set; }
         public TestCheck ReadTestChecks { get; set; }
         public TestCheck WriteTestChecks { get; set; }
@@ -36,6 +38,23 @@ namespace TestChecker.Core
         public void Add(IEnumerable<TestCheckSummary> list)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Helps with backwards compat
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public long GetSuccessCount()
+        {
+            if (SuccessCount != null)
+                return SuccessCount.Value;
+
+            var successCount = ReadTestChecks?.SuccessCount ?? 0 + 
+                                WriteTestChecks?.SuccessCount ?? 0 +
+                                DependencyTestChecks?.Sum(s => s.GetSuccessCount()) ?? 0;
+
+            return successCount;
         }
     }
 }
