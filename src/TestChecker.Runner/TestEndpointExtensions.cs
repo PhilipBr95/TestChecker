@@ -17,6 +17,7 @@ using TestChecker.Core.Serialisation;
 using TestChecker.Runner.Services;
 using TestChecker.Core.Enums;
 using TestChecker.Core.Models;
+using System.Runtime;
 
 namespace TestChecker.Runner
 {
@@ -75,11 +76,26 @@ namespace TestChecker.Runner
                     {
                         CheckTData<TData>();                        
 
-                        var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);                        
+                        var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
+                        
+                        //Only the initial settings need UseUI
+                        var useUI = settings.UseUI;
+                        settings.UseUI = false;
+
                         string json = await ExecuteTestsAsync(settings, runner, context.Request.GetUrl()).ConfigureAwait(false);
 
-                        context.Response.ContentType = "application/json";
-                        await context.Response.WriteAsync(json).ConfigureAwait(false);
+                        if (useUI)
+                        {
+                            string html = await GenerateTestResultsUIAsync(json).ConfigureAwait(false);
+
+                            context.Response.ContentType = "text/html";
+                            await context.Response.WriteAsync(html).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            context.Response.ContentType = "application/json";
+                            await context.Response.WriteAsync(json).ConfigureAwait(false);
+                        }
                     }
                     else
                     {
@@ -92,7 +108,7 @@ namespace TestChecker.Runner
                 _logger?.LogError(ex);
                 throw;
             }
-        }
+        }        
 
         private static void CheckTData<TData>()
         {
@@ -130,6 +146,14 @@ namespace TestChecker.Runner
             return json;
         }
 
+        private static Task<string> GenerateTestResultsUIAsync(string json)
+        {
+            string html = GetHtmlTemplate("TestResultsUI.cshtml");
+            html = html.Replace("@Model.Results", json);
+
+            return Task.FromResult(html);
+        }
+
         private async static Task<string> GenerateTestUIAsync<TData>(TestSettings settings, Assembly callingAssembly, TestRunner<TData> runner, string url, Func<ITestChecks<TData>> testChecks) where TData : class
         {
             var datas = await runner.GetTestDataAsync(null).ConfigureAwait(false);
@@ -157,7 +181,7 @@ namespace TestChecker.Runner
 
         private static string GenerateHtml(TestSettings settings, string json, IEnumerable<MethodName> methodNames, VersionInfo versionInfo)
         {
-            string html = GetHtmlTemplate();
+            string html = GetHtmlTemplate("TestUI.cshtml");
 
             html = html.Replace("@Model.VersionInfos", JsonSerialiser.Serialise(versionInfo));
             html = html.Replace("@Model.FormAction", settings.Path);
@@ -189,11 +213,11 @@ namespace TestChecker.Runner
             return html;
         }
 
-        private static string GetHtmlTemplate()
+        private static string GetHtmlTemplate(string template)
         {
             var assembly = Assembly.GetExecutingAssembly();
 
-            string html = GetResourceString("TestUI.cshtml");
+            string html = GetResourceString(template);
             string js = GetResourceString("json-viewer.js");
             string css = GetResourceString("json-viewer.css");
 

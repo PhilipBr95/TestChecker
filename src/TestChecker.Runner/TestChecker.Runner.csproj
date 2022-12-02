@@ -13,6 +13,7 @@
   <ItemGroup>
     <None Remove="Templates\json-viewer.css" />
     <None Remove="Templates\json-viewer.js" />
+    <None Remove="Templates\TestResultsUI.cshtml" />
     <None Remove="Templates\TestUI.cshtml" />
   </ItemGroup>
 
@@ -30,6 +31,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Templates\json-viewer.css" />
     <EmbeddedResource Include="Templates\json-viewer.js" />
+    <EmbeddedResource Include="Templates\TestResultsUI.cshtml">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Templates\TestUI.cshtml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>

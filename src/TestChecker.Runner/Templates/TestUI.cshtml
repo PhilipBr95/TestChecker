@@ -15,6 +15,8 @@
     <style>
         body { font-family: arial,sans-serif; }
         body > header { text-align: center; }
+		hr { border:none; border-top:1px solid; margin:1em 30%; color:lightblue; }
+
         input { font-family: arial,sans-serif; font-size:14px; }
         .apikey { width: 300px; }		
         .toggleButton, .submitButton { border: none; border-radius: 5px; background-color: #0d47a1; color: white; font-size: 0.8rem; padding: 0.5rem 1rem; }
@@ -23,7 +25,13 @@
         .top {vertical-align: top; padding-top: 2px; }
 		.assemblyChange { padding-top: 10px; }
 		.alternateMethodName { color: #36454F }
-		.submitButton { float: right; background-color: #11a527; }
+		.submitButton { background-color: #4CAF50; }
+
+		.divTable { display: table; width: 100%; }
+		.divTableRow { display: table-row; }		
+		.divTableCellHeader { width: 100px;	display: table-cell; padding: 3px 10px;	}
+		.divTableCellDetail { width: auto; display: table-cell; padding: 3px 10px; }
+		.divTableBody {	display: table-row-group; }
     </style>
 </head>
 <body>
@@ -34,41 +42,46 @@
             <b>Specify the Read or Write ApiKey to authorise which tests to run.</b>
         </p>
     </header>
+	
+	<hr />
+
     <form method="post" action="@Model.FormAction" id="testForm">
 		<input type="hidden" name="Action" id="Action" Value="6"/>	<!--RunTests-->
-        <table>
-            <tr>
-                <td class="top">Version Info:</td>
-                <td><div id="VersionInfo" contentEditable="true" spellcheck="false"></div></td>
-            </tr>
-            <tr>
-                <td class="top">Test Data:</td>
-                <td>
-					<div id="TestData" contentEditable="true" spellcheck="false"></div>
-					<input type="hidden" name="TestData" id="HiddenTestData" />
-				</td>
-            </tr>
-            <tr>
-                <td class="top">Api Key:</td>
-                <td>
-                    <input name="apiKey" type="text" value="@Model.ApiKey" class="apikey">
-                </td>
-            </tr>
-            <tr>
-                <td class="top">Tests To Run:</td>
-                <td>@Model.MethodNames</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td><input class="toggleButton" type="button" value="Toggle All" onclick="toggleTests()" /></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td><input class="submitButton" type="submit" value="Execute" onclick="syncTestData()" /></td>
-            </tr>
-        </table>
-    </form>
-	<script>
+		<div class="divTable">
+			<div class="divTableBody">
+				<div class="divTableRow">
+					<div class="divTableCellHeader">Version Info:</div>
+					<div class="divTableCellDetail" id="VersionInfo" contentEditable="true" spellcheck="false"></div>
+				</div>
+				<div class="divTableRow">
+					<div class="divTableCellHeader">Test Data:</div>
+					<div class="divTableCellDetail" id="TestData" contentEditable="true" spellcheck="false">
+						<input id="HiddenTestData" name="TestData" type="hidden" />
+					</div>
+				</div>
+				<div class="divTableRow">
+					<div class="divTableCellHeader">Api Key:</div>
+					<div class="divTableCellDetail" ><input class="apikey" name="apiKey" type="text" value="@Model.ApiKey" /></div>
+				</div>
+				<div class="divTableRow">
+					<div class="divTableCellHeader">Use UI:</div>
+					<div class="divTableCellDetail" ><input id="useUI" checked="checked" name="useUI" type="checkbox" value="true" /><label for="useUI">Use UI</label></div>
+				</div>
+				<div class="divTableRow">
+					<div class="divTableCellHeader">Tests To Run:</div>
+					<div class="divTableCellDetail" >@Model.MethodNames</div>
+				</div>
+				<div class="divTableRow">
+					<div class="divTableCellHeader"></div>
+					<div class="divTableCellDetail" >
+						<input class="toggleButton" type="button" value="Toggle All" />
+						<input class="submitButton" type="submit" value="Execute" />
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+<script>
 
 	function syncTestData() {
 		var testDataDiv = document.getElementById('TestData');						

@@ -19,6 +19,8 @@ namespace TestChecker.Runner
         {
             var action = request.Query["Action"];
             var apiKey = request.Query["ApiKey"];
+            var useUIString = request.Query["UseUI"];            
+            bool useUI = false;
             var path = GetTestEndPoint(request.PathBase, request.Path);          
 
             if (request.HasFormContentType)
@@ -27,6 +29,7 @@ namespace TestChecker.Runner
                 
                 request.Form.TryGetValue("TestMethods", out StringValues testMethods);
                 request.Form.TryGetValue("TestData", out StringValues testDataJson);
+                request.Form.TryGetValue("UseUI", out useUIString);
 
                 if (string.IsNullOrWhiteSpace(apiKey))
                     request.Form.TryGetValue("ApiKey", out apiKey);
@@ -34,7 +37,8 @@ namespace TestChecker.Runner
                 if (string.IsNullOrWhiteSpace(action))
                     request.Form.TryGetValue("Action", out action);
 
-                return new TestSettings(path, apiKey, testDataJson, GetAction(action, request.Path), testMethods);
+                bool.TryParse(useUIString, out useUI);
+                return new TestSettings(path, apiKey, testDataJson, GetAction(action, request.Path), testMethods) { UseUI = useUI };
             }
             else
             {
@@ -47,7 +51,8 @@ namespace TestChecker.Runner
                 }
             }
 
-            return new TestSettings(path, GetAction(action, request.Path)) { ApiKey = apiKey };
+            bool.TryParse(useUIString, out useUI);
+            return new TestSettings(path, GetAction(action, request.Path)) { ApiKey = apiKey, UseUI = useUI };
         }        
 
         private static string GetTestEndPoint(string pathBase, string path)

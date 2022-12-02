@@ -9,6 +9,7 @@ pre {
 	border-style: solid;
 	padding-bottom: 3px;
 	padding-right: 5px;
+	width: 90%
 }
 
 .json-viewer ul {

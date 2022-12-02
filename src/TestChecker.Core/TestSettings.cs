@@ -14,6 +14,7 @@ namespace TestChecker.Core
         public Actions Action { get; set; }
         public string Path { get; set; }
         public string[] TestMethods { get; set; }
+        public bool UseUI { get; set; }
         public static TestSettings DefaultTestSettings { get; set; }
 
         public TestSettings()

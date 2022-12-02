@@ -15,6 +15,9 @@ namespace TestChecker.Runner
         {
             var action = request.Query["Action"];
             var apiKey = request.Query["ApiKey"];
+            var useUIString = request.Query["UseUI"];
+            bool.TryParse(useUIString, out bool useUI);
+
             var path = GetTestEndPoint(request.PathBase.Value, request.Path.Value);
 
             var formData = await request.ReadFormAsync().ConfigureAwait(false);
@@ -29,7 +32,7 @@ namespace TestChecker.Runner
             if (string.IsNullOrWhiteSpace(action))
                 action = formData.Get("Action");
 
-            return new TestSettings(path, apiKey, testDataJson, GetAction(action, request.Path.Value), testMethods);
+            return new TestSettings(path, apiKey, testDataJson, GetAction(action, request.Path.Value), testMethods) { UseUI = useUI };
         }
     }
 }
