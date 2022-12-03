@@ -39,7 +39,7 @@ namespace TestChecker.Runner.Services
                 return Enumerable.Empty<MethodName>();
 
             if (testCheck.TestChecks.Any())
-                return testCheck?.TestChecks?.Select(s => new MethodName { AssemblyName = systemInfo.Name, Method = s.Method ?? s.Description });
+                return testCheck?.TestChecks?.Select(s => new MethodName { AssemblyName = systemInfo.Name, Method = $"{testCheck.ObjectName}.{s.Method ?? s.Description}" });
 
             return new List<MethodName> { new MethodName { AssemblyName = systemInfo.Name, Method = testCheck.Method, Description = testCheck.Description ?? null } };
         }

@@ -8,6 +8,7 @@ namespace WebApplication1;
 internal interface IMyController
 {
     bool Test(string surname);
+    bool AnotherTest(string forename);
 }
 internal class MyController : IMyController
 {
@@ -15,11 +16,16 @@ internal class MyController : IMyController
     {
         return surname == "Smith";
     }
+
+    public bool AnotherTest(string forename)
+    {
+        return forename == "Paul";
+    }
 }
 
 internal class MyTestChecks : ITestChecks<MyTestData>
 {
-    private MyTestData _testData { get; set; } = new MyTestData { Surname = "Smith" };
+    private MyTestData _testData { get; set; } = new MyTestData { Forename = "Paul", Surname = "Smith" };
 
     public MyTestData GetTestData()
     {
@@ -30,6 +36,7 @@ internal class MyTestChecks : ITestChecks<MyTestData>
     {
         var readTests = new TestCheck("Read Tests");
         var tests = new TestCheck<IMyController, MyTestData>(new MyController(), _testData, CoverageMethod.MethodsOnly, null);
+        tests.TestIsTrue(x => x.AnotherTest(_testData.Forename));
         tests.TestIsTrue(x => x.Test(_testData.Surname));
 
         readTests.Add(tests);

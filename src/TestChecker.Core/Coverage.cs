@@ -8,7 +8,7 @@ using TestChecker.Core.Enums;
 
 namespace TestChecker.Core
 {
-    [DebuggerDisplay("Coverage = {Percentage}%")]
+    [DebuggerDisplay("{Detail} @ {Percentage}%")]
     public class Coverage
     {
         public string Object { get; private set; }

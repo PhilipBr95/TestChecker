@@ -354,7 +354,7 @@ namespace TestChecker.Core
 
         private string GetMethodName(MemberExpression memberExpression)
         {
-            return $"{ObjectName}.{memberExpression.Member.Name}";
+            return $"{memberExpression.Member.Name}";
         }
 
         private string GetMethodNameFallback(MethodCallExpression methodCallExpression)
@@ -377,7 +377,7 @@ namespace TestChecker.Core
                 {
                     var method = (methodCallExpression.Arguments[0] as MemberExpression).Member.Name;
 
-                    return $"{ObjectName}.{method}";
+                    return $"{method}";
                 }
 
                 if (methodCallExpression.Arguments.Count == 1 && methodCallExpression.Arguments[0].NodeType == ExpressionType.Call)
@@ -394,7 +394,7 @@ namespace TestChecker.Core
                 {
                     var method = (methodCallExpression.Arguments[0] as MemberExpression).Member.Name;
 
-                    return $"{ObjectName}.{method}";
+                    return $"{method}";
                 }
 
                 if(methodCallExpression.Arguments.Count == 0)
@@ -405,7 +405,7 @@ namespace TestChecker.Core
                 var paramTypes = methodCallExpression.Arguments.Select(s => s.Type).ToArray();
                 var parameters = typeof(T).GetMethod(methodCallExpression.Method.Name, paramTypes)?.GetParameters();
 
-                return $"{ObjectName}.{methodCallExpression.Method.Name}({string.Join(",", parameters.Select(s => $"{s.ParameterType.Name} {s.Name}"))})";
+                return $"{methodCallExpression.Method.Name}({string.Join(",", parameters.Select(s => $"{s.ParameterType.Name} {s.Name}"))})";
             }
             catch(Exception ex)
             {
