@@ -32,7 +32,7 @@ namespace TestChecker.Core
 
             if (CurrentTestSettings.HasTestMethods(AssemblyName))
             {
-                return CurrentTestSettings.TestMethods.Contains(method) || 
+                return CurrentTestSettings.TestMethods.Contains($"{ObjectName}.{method}") || 
                         CurrentTestSettings.TestMethods.Contains($"{AssemblyName}.{method}");
             }
 

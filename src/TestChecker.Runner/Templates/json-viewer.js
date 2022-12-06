@@ -1,10 +1,10 @@
 /**
  * JSONViewer - by Roman Makudera 2016 (c) MIT licence.
  */
-var JSONViewer = (function(document) {
+var JSONViewer = (function (document) {
 	var Object_prototype_toString = ({}).toString;
 	var DatePrototypeAsString = Object_prototype_toString.call(new Date);
-	
+
 	/** @constructor */
 	function JSONViewer() {
 		this._dom_container = document.createElement("pre");
@@ -19,14 +19,14 @@ var JSONViewer = (function(document) {
 	 * @param {Number} [inputColAt] Collapse at level, where 0..n, -1 unlimited
 	 * @param {Array} keysToCollapse	 
 	 */
-	JSONViewer.prototype.showJSON = function(jsonValue, inputMaxLvl, inputColAt, inputKeysToCollapse) {
+	JSONViewer.prototype.showJSON = function (jsonValue, inputMaxLvl, inputColAt, inputKeysToCollapse) {
 		// Process only to maxLvl, where 0..n, -1 unlimited
 		var maxLvl = typeof inputMaxLvl === "number" ? inputMaxLvl : -1; // max level
 		// Collapse at level colAt, where 0..n, -1 unlimited
 		var colAt = typeof inputColAt === "number" ? inputColAt : -1; // collapse at
-		
+
 		var keysToCollapse = Array.isArray(inputKeysToCollapse) ? inputKeysToCollapse : new Array();
-		
+
 		this._dom_container.innerHTML = "";
 		walkJSONTree(this._dom_container, jsonValue, maxLvl, colAt, 0, keysToCollapse);
 	};
@@ -36,7 +36,7 @@ var JSONViewer = (function(document) {
 	 * 
 	 * @return {Element}
 	 */
-	JSONViewer.prototype.getContainer = function() {
+	JSONViewer.prototype.getContainer = function () {
 		return this._dom_container;
 	};
 
@@ -56,9 +56,29 @@ var JSONViewer = (function(document) {
 		if (typeof realValue === "object" && realValue !== null && !isDate) {
 			var isMaxLvl = maxLvl >= 0 && lvl >= maxLvl;
 			var isCollapse = colAt >= 0 && lvl >= colAt;
-			
+
 			var isArray = Array.isArray(realValue);
 			var items = isArray ? realValue : Object.keys(realValue);
+			var isTestCheckError = !isArray;
+
+			if (isArray == false) {
+				if (items.includes("TestChecks") || items.includes("ReadTestChecks") || items.includes("WriteTestChecks")) {
+					isTestCheckError = false;
+				}
+			}
+
+			if (isTestCheckError && items.includes("Success")) {
+				isTestCheckError = (realValue["Success"] == false);
+			}
+			else {
+				isTestCheckError = false;
+			}
+
+			if (isTestCheckError) {
+				isTestCheckError = isTestCheckError;
+
+				outputParent.classList.add("error")
+			}
 
 			if (lvl === 0) {
 				// root level
@@ -67,7 +87,7 @@ var JSONViewer = (function(document) {
 				var rootLink = _createLink(isArray ? "[" : "{");
 
 				if (items.length) {
-					rootLink.addEventListener("click", function() {
+					rootLink.addEventListener("click", function () {
 						if (isMaxLvl) return;
 
 						rootLink.classList.toggle("collapsed");
@@ -96,7 +116,8 @@ var JSONViewer = (function(document) {
 				ulList.setAttribute("data-level", lvl);
 				ulList.classList.add("type-" + (isArray ? "array" : "object"));
 
-				items.forEach(function(key, ind) {
+				for (let ind = 0; ind < items.length; ind++) {
+					var key = items[ind];
 					var item = isArray ? key : value[key];
 					var li = document.createElement("li");
 
@@ -132,9 +153,9 @@ var JSONViewer = (function(document) {
 
 								walkJSONTree(li, item, maxLvl, colAt, lvl + 1, keysToCollapse);
 								li.appendChild(document.createTextNode(itemIsArray ? "]" : "}"));
-								
+
 								var list = li.querySelector("ul");
-								var itemLinkCb = function() {
+								var itemLinkCb = function () {
 									itemLink.classList.toggle("collapsed");
 									itemsCount.classList.toggle("hide");
 									list.classList.toggle("hide");
@@ -167,7 +188,7 @@ var JSONViewer = (function(document) {
 					}
 
 					ulList.appendChild(li);
-				}, this);
+				};
 
 				outputParent.appendChild(ulList); // output ulList
 			}
@@ -197,7 +218,7 @@ var JSONViewer = (function(document) {
 			}
 		} else {
 			// simple values
-			outputParent.appendChild( createSimpleViewOf(value, isDate) );
+			outputParent.appendChild(createSimpleViewOf(value, isDate));
 		}
 	};
 

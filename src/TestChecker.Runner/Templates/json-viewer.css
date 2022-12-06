@@ -77,3 +77,9 @@ pre {
 .json-viewer .items-ph:hover {
 	text-decoration: underline;
 }
+
+.json-viewer .error {
+	background-color: #efbcbc69;
+	display: table;
+	padding-right: 10px;
+}
