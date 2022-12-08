@@ -52,7 +52,26 @@
 	
 		var json = `@Model.Results`;
 		var jsonObj = JSON.parse(json);
-		jsonViewer.showJSON(jsonObj, -1, -1, ["TestData","TestCoverage","Coverage"]);
+
+		var additionalStyler = function(parentEl, value) {					
+			var isArray = Array.isArray(value);
+			var items = isArray ? value : Object.keys(value);
+			var isTestCheckError = !isArray;
+
+			if (isArray == false) {
+				if (items.includes("TestChecks") || items.includes("ReadTestChecks") || items.includes("WriteTestChecks")) {
+					isTestCheckError = false;
+				}
+			}
+			
+			if (isTestCheckError && items.includes("Success")) {	
+				if ((value["Success"] == false)) {
+					parentEl.classList.add("error")
+				}				
+			}
+		}
+
+		jsonViewer.showJSON(jsonObj, -1, -1, ["TestData","TestCoverage","Coverage"], additionalStyler);
 	}
 	
 	showResults();

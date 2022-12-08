@@ -4,13 +4,13 @@
 var JSONViewer = (function (document) {
 	var Object_prototype_toString = ({}).toString;
 	var DatePrototypeAsString = Object_prototype_toString.call(new Date);
-
+	
 	/** @constructor */
 	function JSONViewer() {
 		this._dom_container = document.createElement("pre");
-		this._dom_container.classList.add("json-viewer");
+		this._dom_container.classList.add("json-viewer");		
 	};
-
+	
 	/**
 	 * Visualise JSON object.
 	 * 
@@ -19,7 +19,7 @@ var JSONViewer = (function (document) {
 	 * @param {Number} [inputColAt] Collapse at level, where 0..n, -1 unlimited
 	 * @param {Array} keysToCollapse	 
 	 */
-	JSONViewer.prototype.showJSON = function (jsonValue, inputMaxLvl, inputColAt, inputKeysToCollapse) {
+	JSONViewer.prototype.showJSON = function (jsonValue, inputMaxLvl, inputColAt, inputKeysToCollapse, styler) {
 		// Process only to maxLvl, where 0..n, -1 unlimited
 		var maxLvl = typeof inputMaxLvl === "number" ? inputMaxLvl : -1; // max level
 		// Collapse at level colAt, where 0..n, -1 unlimited
@@ -28,7 +28,8 @@ var JSONViewer = (function (document) {
 		var keysToCollapse = Array.isArray(inputKeysToCollapse) ? inputKeysToCollapse : new Array();
 
 		this._dom_container.innerHTML = "";
-		walkJSONTree(this._dom_container, jsonValue, maxLvl, colAt, 0, keysToCollapse);
+		
+		walkJSONTree(this._dom_container, jsonValue, maxLvl, colAt, 0, keysToCollapse, styler);
 	};
 
 	/**
@@ -50,7 +51,7 @@ var JSONViewer = (function (document) {
 	 * @param {Number} lvl Current level
 	 * @param {Array} keysToCollapse
 	 */
-	function walkJSONTree(outputParent, value, maxLvl, colAt, lvl, keysToCollapse) {
+	function walkJSONTree(outputParent, value, maxLvl, colAt, lvl, keysToCollapse, styler) {
 		var isDate = Object_prototype_toString.call(value) === DatePrototypeAsString;
 		var realValue = !isDate && typeof value === "object" && value !== null && "toJSON" in value ? value.toJSON() : value;
 		if (typeof realValue === "object" && realValue !== null && !isDate) {
@@ -59,25 +60,9 @@ var JSONViewer = (function (document) {
 
 			var isArray = Array.isArray(realValue);
 			var items = isArray ? realValue : Object.keys(realValue);
-			var isTestCheckError = !isArray;
 
-			if (isArray == false) {
-				if (items.includes("TestChecks") || items.includes("ReadTestChecks") || items.includes("WriteTestChecks")) {
-					isTestCheckError = false;
-				}
-			}
-
-			if (isTestCheckError && items.includes("Success")) {
-				isTestCheckError = (realValue["Success"] == false);
-			}
-			else {
-				isTestCheckError = false;
-			}
-
-			if (isTestCheckError) {
-				isTestCheckError = isTestCheckError;
-
-				outputParent.classList.add("error")
+			if (styler) {
+				styler(outputParent, realValue);
 			}
 
 			if (lvl === 0) {
@@ -151,7 +136,7 @@ var JSONViewer = (function (document) {
 									li.appendChild(itemLink);
 								}
 
-								walkJSONTree(li, item, maxLvl, colAt, lvl + 1, keysToCollapse);
+								walkJSONTree(li, item, maxLvl, colAt, lvl + 1, keysToCollapse, styler);
 								li.appendChild(document.createTextNode(itemIsArray ? "]" : "}"));
 
 								var list = li.querySelector("ul");
@@ -179,7 +164,7 @@ var JSONViewer = (function (document) {
 						}
 
 						// recursive
-						walkJSONTree(li, item, maxLvl, colAt, lvl + 1, keysToCollapse);
+						walkJSONTree(li, item, maxLvl, colAt, lvl + 1, keysToCollapse, styler);
 					}
 
 					// add comma to the end
