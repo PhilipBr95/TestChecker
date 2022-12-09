@@ -101,8 +101,7 @@ var JSONViewer = (function (document) {
 				ulList.setAttribute("data-level", lvl);
 				ulList.classList.add("type-" + (isArray ? "array" : "object"));
 
-				for (let ind = 0; ind < items.length; ind++) {
-					var key = items[ind];
+				items.forEach(function (key, ind) {
 					var item = isArray ? key : value[key];
 					var li = document.createElement("li");
 
@@ -173,7 +172,7 @@ var JSONViewer = (function (document) {
 					}
 
 					ulList.appendChild(li);
-				};
+				}, this);
 
 				outputParent.appendChild(ulList); // output ulList
 			}
