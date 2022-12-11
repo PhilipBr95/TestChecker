@@ -83,3 +83,7 @@ pre {
 	display: table;
 	padding-right: 10px;
 }
+
+[contenteditable] {
+	outline: 0px solid transparent;
+}
