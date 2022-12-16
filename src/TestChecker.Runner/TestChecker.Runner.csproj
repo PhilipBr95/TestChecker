@@ -10,6 +10,18 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
+
+  <PropertyGroup>
+	<PublishRepositoryUrl>true</PublishRepositoryUrl>
+	<EmbedUntrackedSources>true</EmbedUntrackedSources>
+	<IncludeSymbols>true</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>	
+  </PropertyGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
+  </ItemGroup>
+	
   <ItemGroup>
     <None Remove="Templates\json-viewer.css" />
     <None Remove="Templates\json-viewer.js" />
