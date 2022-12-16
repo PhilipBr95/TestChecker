@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  buildVersion: 17.0.0.2
+  
 jobs:
   build:
 
