@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TestChecker.Core.Serialisation;
 using TestChecker.Core.Enums;
-using TestChecker.Core.ContractResolver;
+using System;
+using System.IO;
+using TestChecker.Core.Serialisation.Converters;
 
 namespace TestChecker.Core
 {
@@ -32,19 +34,39 @@ namespace TestChecker.Core
             return result;
         }
 
-        public async Task<TestCheckSummary> RunTestAsync(Actions action, string apiKey, string payload)
+        public async Task<T> RunTestAsync<T>(TestSettings testSettings, VersionInfo versionInfo)
         {
+            try
+            {
+                string payload = GetPayload(testSettings, versionInfo);
 
-            var jsonResult = await _httpClient.PostAsync($"{BaseUrl}/test?action={action}&apikey={apiKey}", payload).ConfigureAwait(false);
+                var jsonResult = await _httpClient.PostAsync($"{BaseUrl}/test?action={testSettings.Action}&apikey={testSettings.ApiKey}", payload).ConfigureAwait(false);
 
-            var settings = new JsonSerializerSettings
-            {                
-                Converters = new List<JsonConverter> { new CoverageConverter() }
-            };
+                var jsonSettings = new JsonSerializerSettings
+                {
+                    Converters = new List<JsonConverter> { new CoverageConverter() }
+                };
 
-            var result = JsonConvert.DeserializeObject<TestCheckSummary>(jsonResult, settings);
-            //return result?.GetTestChecks();
-            return result;
+                var result = JsonConvert.DeserializeObject<T>(jsonResult, jsonSettings);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        private static string GetPayload(TestSettings testSettings, VersionInfo versionInfo)
+        {
+            if(versionInfo?.HasVersion() == true)
+                return JsonSerialiser.Serialise(testSettings);
+
+            //For backwards compat...
+            if (testSettings.Action == Actions.GetVersion)
+                return String.Empty;
+
+            //More backwards compat...
+            return testSettings.TestDataJson;
         }
     }
 }

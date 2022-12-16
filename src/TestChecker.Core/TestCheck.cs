@@ -5,13 +5,15 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
+using TestChecker.Core.Enums;
 using TestChecker.Core.Serialisation;
 
 namespace TestChecker.Core
 {
     [DebuggerDisplay("Object = {ObjectName}, Method = {Method}")]
-    public class TestCheck
+    public partial class TestCheck
     {
 
         [JsonProperty("Object", Order =-20)]
@@ -50,6 +52,7 @@ namespace TestChecker.Core
 
         public List<TestCheck> TestChecks { get; set; } = new List<TestCheck>();
 
+
         public TestCheck()
         {
         }
@@ -58,10 +61,13 @@ namespace TestChecker.Core
         {
             Description = description;
         }
-        public TestCheck(bool success)
+
+        public TestCheck(string description, string returnValue, bool success)
         {
+            Description = description;
             Success = success;
-            
+            ReturnValue = returnValue;
+
             if (success)
             {
                 SuccessCount++;
@@ -137,12 +143,14 @@ namespace TestChecker.Core
         }
 
         public TestCheck TestIsTrue(string description, Func<bool> functionToTest)
-        {
+        {         
+            if (!RunTest(description)) return this;
+
             try
             {
                 var success = functionToTest();
 
-                Add(new TestCheck(success) { Description = description, ReturnValue = success.ToString() }, true);
+                Add(new TestCheck(description, success.ToString(), success), true);
             }
             catch (Exception ex)
             {
@@ -154,11 +162,13 @@ namespace TestChecker.Core
 
         public async Task<TestCheck> TestIsTrueAsync(string description, Func<Task<bool>> functionToTest)
         {
+            if (!RunTest(description)) return this;
+
             try
             {
                 var success = await functionToTest().ConfigureAwait(false);
 
-                Add(new TestCheck(success) { Description = description, ReturnValue = success.ToString() }, true);
+                Add(new TestCheck(description, success.ToString(), success), true);
             }
             catch (Exception ex)
             {

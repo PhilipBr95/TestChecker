@@ -14,6 +14,10 @@ using TestChecker.Core;
 using Newtonsoft.Json.Linq;
 using TestChecker.Runner.Extensions;
 using TestChecker.Core.Serialisation;
+using TestChecker.Runner.Services;
+using TestChecker.Core.Enums;
+using TestChecker.Core.Models;
+using System.Runtime;
 
 namespace TestChecker.Runner
 {
@@ -21,57 +25,77 @@ namespace TestChecker.Runner
     {
         private static ILogger _logger;
 
-        public const string REGRESSION_END_POINT = "/test";
-        public const string REGRESSIONTESTDATA_END_POINT = "/testdata";
-        public const string REGRESSIONUI_END_POINT = "/testui";
+        public const string TEST_END_POINT = "/test";
+        public const string TESTDATA_END_POINT = "/testdata";
+        public const string TESTUI_END_POINT = "/testui";
 
         const string READ_ENVIRONMENT_NAME = "TEST_READ_SECURITY_TOKEN";
         const string READ_WRITE_ENVIRONMENT_NAME = "TEST_READWRITE_SECURITY_TOKEN";
+        
+        private static IMethodNameExtractorService _methodNameExtractor;
+        private static ITestCheckDependencyRunner _testCheckDependencyRunner;
 
-        private static JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
+        public static void AddTestEndpoint(this IServiceCollection services)
         {
-            Formatting = Formatting.Indented,
-            NullValueHandling = NullValueHandling.Ignore,
-            ContractResolver = new ShouldSerializeContractResolver(),
-            Converters = new List<JsonConverter> { new MemoryStreamJsonConverter() }
-        };
+            services.AddSingleton<IMethodNameExtractorService, MethodNameExtractorService>();
+        }
 
         public static void UseTestEndpoint<TData>(this IApplicationBuilder app, List<ITestCheckDependency> dependencies, Func<ITestChecks<TData>> testChecks, string readEnvironmentName = READ_ENVIRONMENT_NAME, string readWriteEnvironmentName = READ_WRITE_ENVIRONMENT_NAME) where TData : class, new()
         {
-            var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-            var runner = new TestRunner<TData>(Assembly.GetEntryAssembly(), dependencies, testChecks, loggerFactory, GetEnvironmentVariable(readEnvironmentName), GetEnvironmentVariable(readWriteEnvironmentName));
+            _methodNameExtractor = app.ApplicationServices.GetService<IMethodNameExtractorService>();
+            if (_methodNameExtractor == null) throw new InvalidOperationException($"Call ServiceCollection.AppTestEndpoint() first");
+
+            _testCheckDependencyRunner = new TestCheckDependencyRunner(dependencies, app.ApplicationServices.GetRequiredService<ILogger<TestCheckDependencyRunner>>());
+
+            var runner = new TestRunner<TData>(Assembly.GetEntryAssembly(), _testCheckDependencyRunner, testChecks, app.ApplicationServices.GetRequiredService<ILogger<ITestChecks<TData>>>(), GetEnvironmentVariable(readEnvironmentName), GetEnvironmentVariable(readWriteEnvironmentName));
 
             try
             {
+                var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
                 _logger = loggerFactory?.CreateLogger(typeof(TestEndpointExtensions).FullName);
-
-                CheckTData<TData>();
 
                 app.Use(async (context, next) =>
                 {
-                    if (context.Request.Path.Value.Equals(REGRESSIONTESTDATA_END_POINT, StringComparison.CurrentCultureIgnoreCase))
-                    {
+                    if (context.Request.Path.Value.Equals(TESTDATA_END_POINT, StringComparison.CurrentCultureIgnoreCase))
+                    {                        
                         var testData = await runner.GetTestDataAsync(null).ConfigureAwait(false);
-                        string json = Newtonsoft.Json.JsonConvert.SerializeObject(testData, _jsonSettings);
+                        string json = JsonSerialiser.Serialise(testData);
 
                         context.Response.ContentType = "application/json";
                         await context.Response.WriteAsync(json).ConfigureAwait(false);
                     }
-                    else if (context.Request.Path.Value.Equals(REGRESSIONUI_END_POINT, StringComparison.CurrentCultureIgnoreCase))
+                    else if (context.Request.Path.Value.Equals(TESTUI_END_POINT, StringComparison.CurrentCultureIgnoreCase))
                     {
-                        var settings = await Settings.GetSettingsAsync(context.Request).ConfigureAwait(false);
-                        string html = await GenerateTestUIAsync(settings, Assembly.GetEntryAssembly(), runner, testChecks).ConfigureAwait(false);
+                        var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
+                        string html = await GenerateTestUIAsync(settings, Assembly.GetEntryAssembly(), runner, context.Request.GetUrl(), testChecks).ConfigureAwait(false);
 
                         context.Response.ContentType = "text/html";
                         await context.Response.WriteAsync(html).ConfigureAwait(false);
                     }
-                    else if (context.Request.Path.Value.Equals(REGRESSION_END_POINT, StringComparison.CurrentCultureIgnoreCase))
+                    else if (context.Request.Path.Value.Equals(TEST_END_POINT, StringComparison.CurrentCultureIgnoreCase))
                     {
-                        var settings = await Settings.GetSettingsAsync(context.Request).ConfigureAwait(false);
+                        CheckTData<TData>();                        
+
+                        var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
+                        
+                        //Only the initial settings need UseUI
+                        var useUI = settings.UseUI;
+                        settings.UseUI = false;
+
                         string json = await ExecuteTestsAsync(settings, runner, context.Request.GetUrl()).ConfigureAwait(false);
 
-                        context.Response.ContentType = "application/json";
-                        await context.Response.WriteAsync(json).ConfigureAwait(false);
+                        if (useUI)
+                        {
+                            string html = await GenerateTestResultsUIAsync(json).ConfigureAwait(false);
+
+                            context.Response.ContentType = "text/html";
+                            await context.Response.WriteAsync(html).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            context.Response.ContentType = "application/json";
+                            await context.Response.WriteAsync(json).ConfigureAwait(false);
+                        }
                     }
                     else
                     {
@@ -84,11 +108,14 @@ namespace TestChecker.Runner
                 _logger?.LogError(ex);
                 throw;
             }
-        }
+        }        
 
         private static void CheckTData<TData>()
         {
             var type = typeof(TData);
+
+            if (!type.IsPublic)
+                _logger?.LogWarning($"{type.FullName} isn't public");
 
             var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic).ToList();
             properties.ForEach(fe => _logger?.LogWarning($"{type.FullName}.{fe.Name} isn't public"));
@@ -111,35 +138,102 @@ namespace TestChecker.Runner
             return null;
         }
 
-        private async static Task<string> ExecuteTestsAsync<TData>(Settings settings, TestRunner<TData> runner, string url) where TData : class
+        private async static Task<string> ExecuteTestsAsync<TData>(TestSettings settings, TestRunner<TData> runner, string url) where TData : class
         {
             var response = await runner.HandleRequestAsync(settings, url).ConfigureAwait(false);
-            var json = JsonConvert.SerializeObject(response, _jsonSettings);
+            var json = JsonSerialiser.Serialise(response);
 
             return json;
         }
 
-        private async static Task<string> GenerateTestUIAsync<TData>(Settings settings, Assembly callingAssembly, TestRunner<TData> runner, Func<ITestChecks<TData>> testChecks) where TData : class
+        private static Task<string> GenerateTestResultsUIAsync(string json)
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            string resourceName = assembly.GetManifestResourceNames()
-                                          .Single(str => str.EndsWith("TestUI.cshtml"));
+            string html = GetHtmlTemplate("TestResultsUI.cshtml");
+            html = html.Replace("@Model.Results", json);
 
-            var html = new StreamReader(assembly.GetManifestResourceStream(resourceName)).ReadToEnd();
-            
+            return Task.FromResult(html);
+        }
+
+        private async static Task<string> GenerateTestUIAsync<TData>(TestSettings settings, Assembly callingAssembly, TestRunner<TData> runner, string url, Func<ITestChecks<TData>> testChecks) where TData : class
+        {
             var datas = await runner.GetTestDataAsync(null).ConfigureAwait(false);
-            var json = JsonConvert.SerializeObject(datas, _jsonSettings);
 
-            string result = GenerateHtml(settings, html, json);
+            //Get the function names
+            var nameSettings = new TestSettings(TestEndpointExtensions.TEST_END_POINT, Core.Enums.Actions.GetNames | Core.Enums.Actions.RunReadTests)
+            {
+                ApiKey = GetEnvironmentVariable(READ_WRITE_ENVIRONMENT_NAME) ?? GetEnvironmentVariable(READ_ENVIRONMENT_NAME)
+            };
+            
+            var names = await ExecuteTestsAsync<TData>(nameSettings, runner, url);
+            var namesSummary = JsonConvert.DeserializeObject<TestCheckSummary>(names);            
+            var allMethodNames = _methodNameExtractor.RetrieveMethodNames(namesSummary);
+
+            var dataJson = JsonSerialiser.Serialise(datas);
+
+            var versionInfo = new VersionInfo(true)
+            {
+                Dependencies = await _testCheckDependencyRunner.GetVersionInfoAsync()
+            };
+
+            string result = GenerateHtml(settings, dataJson, allMethodNames, versionInfo);
             return result;
         }
 
-        private static string GenerateHtml(Settings settings, string html, string json)
+        private static string GenerateHtml(TestSettings settings, string json, IEnumerable<MethodName> methodNames, VersionInfo versionInfo)
         {
-            html = html.Replace("@Model.Action", settings.Path);
+            string html = GetHtmlTemplate("TestUI.cshtml");
+
+            html = html.Replace("@Model.VersionInfos", JsonSerialiser.Serialise(versionInfo));
+            html = html.Replace("@Model.FormAction", settings.Path);
+            html = html.Replace("@Model.ApiKey", settings.ApiKey);
             html = html.Replace("@Model.TestData", json);
-            return html.Replace("@Model.ApiKey", settings.ApiKey);            
+
+            var methodNamesHtml = "<div>";
+            var lastAssembly = methodNames.FirstOrDefault()?.AssemblyName;
+            var i = 0;
+            var alternate = false;
+
+            foreach (var methodName in methodNames)
+            {
+                if(lastAssembly != methodName.AssemblyName)
+                {
+                    alternate = !alternate;
+                    var css = alternate ? "alternateMethodName" : string.Empty;
+
+                    methodNamesHtml += $"</div><div class='assemblyChange {css}'>";
+                    lastAssembly = methodName.AssemblyName;
+                }
+
+                methodNamesHtml += $"<input type='checkbox' name='testMethods' id='method{i}' value='{methodName.FullName}' checked /><label for='method{i}'>{methodName}</label><br />";
+                i++;
+            };
+
+            methodNamesHtml += "</div>";
+            html = html.Replace("@Model.MethodNames", methodNamesHtml);
+            return html;
         }
+
+        private static string GetHtmlTemplate(string template)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            string html = GetResourceString(template);
+            string js = GetResourceString("json-viewer.js");
+            string css = GetResourceString("json-viewer.css");
+
+            html = html.Replace("@Model.JSONViewerJs", js);
+            html = html.Replace("@Model.JSONViewerCss", css);
+            return html;
+
+            string GetResourceString(string resourceName)
+            {
+                resourceName = assembly.GetManifestResourceNames()
+                                       .Single(str => str.EndsWith(resourceName));
+                var text = new StreamReader(assembly.GetManifestResourceStream(resourceName)).ReadToEnd();
+                return text;
+            }
+        }
+
 
         private static string GetEnvironmentVariable(string environmentVariable)
         {

@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using TestChecker.Core;
-using TestChecker.Runner;
 
 namespace TestChecker.Runner.Tests
 {

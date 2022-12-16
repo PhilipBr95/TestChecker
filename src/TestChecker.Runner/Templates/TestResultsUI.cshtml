@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Test UI Results</title>
+
+	<script>
+	@Model.JSONViewerJs
+	</script>
+	<style>
+	@Model.JSONViewerCss
+	</style>
+	
+    <style>
+        body { font-family: arial,sans-serif; }
+        body > header { text-align: center; }
+		hr { border:none; border-top:1px solid; margin:1em 30%; color:lightblue; }
+
+        .json-viewer, .apikey { background-color: #f5f7ff; border: 1px solid #d8dae1; border-radius: 5px; }
+        .top {vertical-align: top; padding-top: 2px; }
+		
+		.divTable { display: table; width: 100%; }
+		.divTableRow { display: table-row; }		
+		.divTableCellHeader { width: 100px;	display: table-cell; padding: 3px 10px;	}
+		.divTableCellDetail { width: auto; display: table-cell; padding: 3px 10px; }
+		.divTableBody {	display: table-row-group; }
+	</style>
+</head>
+<body>
+    <header>
+        <h1>Test Results</h1>
+    </header>
+	
+	<hr />
+
+    <div class="divTable">
+        <div class="divTableBody">
+			<div class="divTableRow">
+				<div class="divTableCellHeader">Results:</div>
+				<div class="divTableCellDetail" id="Results" contentEditable="true" spellcheck="false"></div>
+			</div>
+        </div>
+    </div>
+	<script>
+
+	function showResults() {
+		var jsonViewer = new JSONViewer();	
+	
+		var el = document.querySelector("#Results")
+		el.appendChild(jsonViewer.getContainer());
+	
+		var json = `@Model.Results`;
+		var jsonObj = JSON.parse(json);
+
+		var additionalStyler = function(parentEl, value) {					
+			var isArray = Array.isArray(value);
+			var items = isArray ? value : Object.keys(value);
+			var isTestCheckError = !isArray;
+
+			if (isArray == false) {
+				if (items.includes("TestChecks") || items.includes("ReadTestChecks") || items.includes("WriteTestChecks")) {
+					isTestCheckError = false;
+				}
+			}
+			
+			if (isTestCheckError && items.includes("Success")) {	
+				if ((value["Success"] == false)) {
+					parentEl.classList.add("error")
+				}				
+			}
+		}
+
+		jsonViewer.showJSON(jsonObj, -1, -1, ["TestData","TestCoverage","Coverage"], additionalStyler);
+	}
+	
+	showResults();
+
+	</script>
+</body>
+</html>

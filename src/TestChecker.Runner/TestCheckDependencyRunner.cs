@@ -1,45 +1,80 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TestChecker.Core;
+using TestChecker.Core.Extensions;
+using TestChecker.Core.Serialisation;
 
 namespace TestChecker.Runner
 {
-    internal class TestCheckDependencyRunner
-    {
-        private List<ITestCheckDependency> _dependencies;
+    internal class TestCheckDependencyRunner : ITestCheckDependencyRunner
+    {        
+        public List<ITestCheckDependency> Dependencies { get; private set; }
         private ILogger<TestCheckDependencyRunner> _logger;
 
         public TestCheckDependencyRunner(List<ITestCheckDependency> dependencies, ILogger<TestCheckDependencyRunner> logger)
         {
-            _dependencies = dependencies;
+            Dependencies = dependencies;
             _logger = logger;
         }
 
-        internal async Task<List<TestCheckSummary>> RunTestsAsync(Settings settings)
+        public async Task<List<T>> RunTestActionAsync<T>(TestSettings settings) where T : new()
         {             
-            if (_dependencies == null) return null;
+            if (Dependencies == null) return default;
 
-            var testChecks = new List<TestCheckSummary>();
+            var results = new List<T>();
 
-            foreach (var dependency in _dependencies)
+            foreach (var dependency in Dependencies)
             {
-                _logger?.LogDebug($"{nameof(dependency.RunTestAsync)} called on {dependency.Service} with {settings.TestDataJson}");
+                _logger?.LogDebug($"{nameof(dependency.RunTestActionAsync)} called on {dependency.Service} with {settings.TestDataJson}");
 
-                var testCheckSummary = await dependency.RunTestAsync(settings.Action, settings.ApiKey, settings.TestDataJson).ConfigureAwait(false);
-                testChecks.Add(testCheckSummary);
+                try
+                {
+                    var versionInfo = (await dependency.GetVersionInfoAsync());
+
+                    if (versionInfo.HasAvailableAction(settings.Action))
+                    {
+                        if (settings.HasTestMethods(versionInfo.System.Name))
+                        {
+                            var runResult = await dependency.RunTestActionAsync<T>(settings).ConfigureAwait(false);
+                            results.Add(runResult);
+                        }
+                    }
+                    else
+                    {
+                        _logger?.LogWarning($"Missing Action {settings.Action} for {dependency.Service.BaseUrl}");
+
+                        if(settings.Action.HasFlag(Core.Enums.Actions.GetNames))
+                        {                            
+                            results.Add((new TestCheckSummary 
+                            { 
+                                System = versionInfo.System,
+                                ReadTestChecks = new TestCheck
+                                {
+                                    TestChecks = new List<TestCheck> { new TestCheck { Method = "*", Description = "[Unknown Methods]" } }
+                                }
+                            }).ConvertTo<T>()); //Minor Generics Hack :-)                            
+                        }
+                    }
+                }
+                catch(Exception ex)
+                {
+                    _logger?.LogError(ex, $"Error hitting {nameof(dependency.RunTestActionAsync)} on {dependency.Service}");
+                    throw;
+                }
             }
             
-            return testChecks;
+            return results;
         }
 
-        internal async Task<List<NamedTestData>> GetTestDataAsync()
+        public async Task<List<NamedTestData>> GetTestDataAsync()
         {
             var testData = new List<NamedTestData>();
 
-            if (_dependencies == null) return testData;
+            if (Dependencies == null) return testData;
 
-            foreach (var dependency in _dependencies)
+            foreach (var dependency in Dependencies)
             {
                 _logger?.LogDebug($"{nameof(dependency.GetTestDataAsync)} called on {dependency.Service}");
 
@@ -52,6 +87,20 @@ namespace TestChecker.Runner
             }
 
             return testData;
+        }
+
+        public async Task<List<VersionInfo>> GetVersionInfoAsync()
+        {
+            var versionInfos = new List<VersionInfo>();
+
+            if (Dependencies == null) return versionInfos;
+
+            foreach (var dependency in Dependencies)
+            {
+                versionInfos.Add(await dependency.GetVersionInfoAsync());
+            }
+
+            return versionInfos;
         }
     }
 }

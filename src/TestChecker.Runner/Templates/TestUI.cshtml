@@ -3,31 +3,134 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title>TestData Editor</title>
+    <title>Test UI</title>
 
+	<script>
+	@Model.JSONViewerJs
+	</script>
+	<style>
+	@Model.JSONViewerCss
+	</style>
+	
     <style>
         body { font-family: arial,sans-serif; }
-        .apikey { width: 300px; }
-    </style>    
+        body > header { text-align: center; }
+		hr { border:none; border-top:1px solid; margin:1em 30%; color:lightblue; }
+
+        input { font-family: arial,sans-serif; font-size:14px; }
+        .apikey { width: 300px; }		
+        .toggleButton, .submitButton { border: none; border-radius: 5px; background-color: #0d47a1db; color: white; font-size: 0.8rem; padding: 0.5rem 1rem; }
+        .toggleButton:focus, .toggleButton:hover, .submitButton:focus, .submitButton:hover { filter: brightness(0.8); cursor: pointer; }
+        .json-viewer, .apikey { background-color: #f5f7ff; border: 1px solid #d8dae1; border-radius: 5px; }
+        .top {vertical-align: top; padding-top: 2px; }
+		.assemblyChange { padding-top: 10px; }
+		.alternateMethodName { color:#000066; }
+		.submitButton { background-color: #4CAF50; }
+		.executeOptions { vertical-align:sub; }
+
+		.divTable { display: table; width: 100%; }
+		.divTableRow { display: table-row; }		
+		.divTableCellHeader { width: 100px;	display: table-cell; padding: 3px 10px;	}
+		.divTableCellDetail { width: auto; display: table-cell; padding: 3px 10px; }
+		.divTableBody {	display: table-row-group; }
+		.divTableCellButtons { padding-top: 20px; }
+    </style>
 </head>
 <body>
-    <form method="post" action="@Model.Action" id="testForm">
-        <table>
-            <tr>
-                <td valign="top">TestData:</td>
-                <td><textarea rows="25" cols="115" id="TestData" name="TestData">@Model.TestData</textarea></td>
-            </tr>
-            <tr>
-                <td valign="top">ApiKey:</td>
-                <td>
-                    <input name="apiKey" type="text" value="@Model.ApiKey" class="apikey">
-                </td>
-            </tr>
-            <tr>
-                <td></td>
-                <td><input type="submit" value="Execute" /></td>
-            </tr>
-        </table>
-    </form>
+    <header>
+        <h1>Test Configuration</h1>
+        <p>
+            Use this form to edit the test data for your scenario and exclude certain tests from execution.<br />
+            <b>Specify the Read or Write ApiKey to authorise which tests to run.</b>
+        </p>
+    </header>
+	
+	<hr />
+
+    <form method="post" action="@Model.FormAction" id="testForm">
+		<input type="hidden" name="Action" id="Action" Value="6"/>	<!--RunTests-->
+		<div class="divTable">
+			<div class="divTableBody">
+				<div class="divTableRow">
+					<div class="divTableCellHeader">Version Info:</div>
+					<div class="divTableCellDetail" id="VersionInfo" contentEditable="true" spellcheck="false"></div>
+				</div>
+				<div class="divTableRow">
+					<div class="divTableCellHeader">Test Data:</div>
+					<div class="divTableCellDetail" id="TestData" contentEditable="true" spellcheck="false">
+						<input id="HiddenTestData" name="TestData" type="hidden" />
+					</div>
+				</div>
+				<div class="divTableRow">
+					<div class="divTableCellHeader">Api Key:</div>
+					<div class="divTableCellDetail" ><input class="apikey" name="apiKey" type="text" value="@Model.ApiKey" /></div>
+				</div>
+				<div class="divTableRow">
+					<div class="divTableCellHeader">Tests To Run:</div>
+					<div class="divTableCellDetail" >@Model.MethodNames</div>
+				</div>
+				<div class="divTableRow">
+					<div class="divTableCellHeader"></div>
+					<div class="divTableCellDetail divTableCellButtons" >
+						<input class="toggleButton" type="button" value="Toggle Methods" />
+						<input class="submitButton" type="submit" value="Execute" onclick="syncTestData();" />
+						<span class="executeOptions">
+							<input id="useUI" checked="checked" name="useUI" type="checkbox" value="true" /><label for="useUI">Use UI</label>
+						</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+<script>
+
+	function syncTestData() {
+		var testDataDiv = document.getElementById('TestData');						
+		var nodes = testDataDiv.querySelectorAll("a");		
+		
+		nodes.forEach(function(el) {
+			if(el.classList?.contains("collapsed"))
+				el.click();
+		});
+				
+		var testData = document.getElementById('HiddenTestData');
+		testData.value = testDataDiv.innerText;
+		
+		return true;
+	}
+
+	function toggleTests() {
+	  checkboxes = document.getElementsByName('testMethods');
+	  for(var i=0, n=checkboxes.length;i<n;i++) {
+		checkboxes[i].checked = !checkboxes[i].checked;
+	  }
+	}
+
+	function showVersionInfo() {
+		var jsonViewer = new JSONViewer();	
+	
+		var el = document.querySelector("#VersionInfo")
+		el.appendChild(jsonViewer.getContainer());
+	
+		var json = `@Model.VersionInfos`;
+		var jsonObj = JSON.parse(json);
+		jsonViewer.showJSON(jsonObj, -1, -1, ["AvailableActions"]);
+	}
+	
+	function showTestData() {
+		var jsonViewer = new JSONViewer();	
+	
+		var el = document.querySelector("#TestData")
+		el.appendChild(jsonViewer.getContainer());
+	
+		var json = `@Model.TestData`;
+		var jsonObj = JSON.parse(json);
+		jsonViewer.showJSON(jsonObj);
+	}
+
+	showVersionInfo();
+	showTestData();
+		
+	</script>
 </body>
 </html>

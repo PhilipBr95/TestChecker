@@ -7,11 +7,11 @@ using TestChecker.Core.ContractResolver;
 
 namespace TestChecker.Core.Serialisation
 {
-    public class Serialiser
+    public class DepthSerialiser
     {
         private int _maxDepth;
 
-        public Serialiser(int maxDepth)
+        public DepthSerialiser(int maxDepth)
         {
             _maxDepth = maxDepth;
         }

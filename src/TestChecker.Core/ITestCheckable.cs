@@ -7,7 +7,7 @@ namespace TestChecker.Core
     public interface ITestCheckable
     {
         string BaseUrl { get; }
-        Task<TestCheckSummary> RunTestAsync(Actions action, string apiKey, string json);
+        Task<T> RunTestAsync<T>(TestSettings testSettings, VersionInfo versionInfo);
         Task<List<NamedTestData>> GetTestDataAsync();
     }
 }

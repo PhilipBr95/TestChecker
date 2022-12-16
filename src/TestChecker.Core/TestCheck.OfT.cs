@@ -2,28 +2,24 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net;
-using System.Reflection;
 using System.Threading.Tasks;
+using TestChecker.Core.Enums;
 using TestChecker.Core.Serialisation;
 
 namespace TestChecker.Core
-{    
+{
     public partial class TestCheck<T,TData> : TestCheck where T : class 
                                                 where TData : class
     {        
-        private Recorder<T> _recorder;
-        private T _obj;
-        private TData _testData;
-        private CoverageMethod _coverageMethod;
-        private ILogger _logger;
-        private IObjectSerialiser ObjectSerialiser { get; set; }
+        private readonly Recorder<T> _recorder;
+        private readonly T _obj;
+        private readonly TData _testData;
+        private readonly CoverageMethod _coverageMethod;
+        private readonly ILogger _logger;        
 
-        //public TData TestData => _testData;
+        private IObjectSerialiser ObjectSerialiser { get; set; }
 
         [JsonIgnore]
         public T Object => _obj;
@@ -32,20 +28,12 @@ namespace TestChecker.Core
         {            
             if (!typeof(T).IsInterface)
                 throw new ArgumentException("T must be an interface in x = new TestCheck<T....");
-
-            ObjectName = typeof(T).Name;
+            
             _testData = testData;
             _coverageMethod = coverageMethod;
             _logger = logger;
-
-            if (objectSerialiser == null)
-            {
-                ObjectSerialiser = new ObjectSerialiser(logger);
-            }
-            else
-            {
-                ObjectSerialiser = objectSerialiser;
-            }
+            ObjectName = typeof(T).FullName;
+            ObjectSerialiser = objectSerialiser ?? new ObjectSerialiser(logger);
 
             _recorder = new Recorder<T>(coverageMethod);
             _obj = _recorder.CreateProxy(obj);
@@ -55,6 +43,8 @@ namespace TestChecker.Core
 
         public async Task<TestCheck<T, TData>> TestIsObjectAsync<TOut>(string description, Func<T, TData, Task<TOut>> functionToTest, int maxDepth = 1)
         {
+            if (!RunTest(description)) return this;
+
             try
             {
                 var obj = await functionToTest.Invoke(_obj, _testData).ConfigureAwait(false);
@@ -62,11 +52,11 @@ namespace TestChecker.Core
 
                 var success = ObjectSerialiser.IsObject();
 
-                Add(new TestCheck(success) { ReturnValue = ObjectSerialiser.SerialiseObject(maxDepth), Description = description }, true);
+                Add(new TestCheck(description, ObjectSerialiser.SerialiseObject(maxDepth), success), true);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, description);
                 Add(new TestCheck(null, ex) { Description = description }, true);
             }
 
@@ -78,6 +68,8 @@ namespace TestChecker.Core
         {
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
             string method = GetMethodName(methodCallExpression);
+
+            if (!RunTest(method)) return this;
 
             try
             {
@@ -93,7 +85,7 @@ namespace TestChecker.Core
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, method);
                 Add(new TestCheck(method, ex), true);
             }
 
@@ -104,6 +96,8 @@ namespace TestChecker.Core
         {
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
             string method = GetMethodName(methodCallExpression);
+
+            if (!RunTest(method)) return this;
 
             try
             {
@@ -119,10 +113,16 @@ namespace TestChecker.Core
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, method);
                 Add(new TestCheck(method, ex), true);
             }
 
+            return this;
+        }
+
+        private TestCheck<T, TData> GetNameTestCheck(string method)
+        {
+            Add(new TestCheck() { Method = method }, true);
             return this;
         }
 
@@ -130,6 +130,8 @@ namespace TestChecker.Core
         {
             var method = GetEndPointName<TOut>(functionToTest);
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
+
+            if (!RunTest(method)) return this;
 
             try
             {
@@ -145,7 +147,7 @@ namespace TestChecker.Core
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, method);
                 Add(new TestCheck(method, ex), true);
             }
 
@@ -154,6 +156,8 @@ namespace TestChecker.Core
 
         public TestCheck<T, TData> TestIsObject<TOut>(string description, Func<T, TData, TOut> functionToTest, int maxDepth = 1)
         {
+            if (!RunTest(description)) return this;
+
             try
             {                
                 var obj = functionToTest.Invoke(_obj, _testData);
@@ -161,11 +165,11 @@ namespace TestChecker.Core
 
                 var success = ObjectSerialiser.IsObject();
 
-                Add(new TestCheck(success) { ReturnValue = ObjectSerialiser.SerialiseObject(maxDepth), Description = description }, true);
+                Add(new TestCheck(description, ObjectSerialiser.SerialiseObject(maxDepth), success), true);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, description);
                 Add(new TestCheck(null, ex) { Description = description }, true);
             }
 
@@ -174,6 +178,8 @@ namespace TestChecker.Core
 
         public TestCheck<T, TData> TestIsObject<TOut>(string description, Func<T, TOut> functionToTest, int maxDepth = 1)
         {
+            if (!RunTest(description)) return this;
+
             try
             {
                 var obj = functionToTest.Invoke(_obj);
@@ -181,15 +187,39 @@ namespace TestChecker.Core
 
                 var success = ObjectSerialiser.IsObject();
 
-                Add(new TestCheck(success) { ReturnValue = ObjectSerialiser.SerialiseObject(maxDepth), Description = description }, true);
+                Add(new TestCheck(description, ObjectSerialiser.SerialiseObject(maxDepth), success), true);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, description);
                 Add(new TestCheck(null, ex) { Description = description }, true);
             }
 
             return this;
+        }
+
+        public TestCheck<T, TData> TestIsTrue(Expression<Func<T, TData, bool>> functionToTest)
+        {
+            var methodCallExpression = (functionToTest.Body as MethodCallExpression);
+            string method = GetMethodName(methodCallExpression);
+
+            if (!RunTest(method)) return this;
+
+            try
+            {
+                var function = functionToTest.Compile();
+                var success = function.Invoke(_obj, _testData);
+
+                Add(new TestCheck(method, null, success, null) { ReturnValue = success.ToString() }, true);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, method);
+                Add(new TestCheck(method, ex), true);
+            }
+
+            return this;
+
         }
 
         public TestCheck<T, TData> TestIsTrue(Expression<Func<T, bool>> functionToTest)
@@ -197,16 +227,18 @@ namespace TestChecker.Core
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
             string method = GetMethodName(methodCallExpression);
 
+            if (!RunTest(method)) return this;
+
             try
             {
                 var function = functionToTest.Compile();
                 var success = function.Invoke(_obj);
                 
-                Add(new TestCheck(method, null, success, null), true);
+                Add(new TestCheck(method, null, success, null) { ReturnValue = success.ToString() }, true);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, method);
                 Add(new TestCheck(method, ex), true);
             }
 
@@ -218,16 +250,18 @@ namespace TestChecker.Core
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
             string method = GetMethodName(methodCallExpression);
 
+            if (!RunTest(method)) return this;
+
             try
             {
                 var function = functionToTest.Compile();
                 var success = await function.Invoke(_obj).ConfigureAwait(false);
                 
-                Add(new TestCheck(method, null, success, success.ToString()), true);
+                Add(new TestCheck(method, null, success, success.ToString()) { ReturnValue = success.ToString() }, true);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, method);
                 Add(new TestCheck(method, ex), true);
             }
 
@@ -236,15 +270,17 @@ namespace TestChecker.Core
 
         public TestCheck<T, TData> TestIsTrue(string description, Func<TData, bool> functionToTest)
         {
+            if (!RunTest(description)) return this;
+
             try
             {
                 var success = functionToTest(_testData);
 
-                Add(new TestCheck(success) { Description = description, ReturnValue = success.ToString() }, true);
+                Add(new TestCheck(description, success.ToString(), success), true);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, description);
                 Add(new TestCheck(null, ex) { Description = description }, true);
             }
 
@@ -253,15 +289,17 @@ namespace TestChecker.Core
 
         public TestCheck<T, TData> TestIsTrue(string description, Func<T, TData, bool> functionToTest)
         {
+            if (!RunTest(description)) return this;
+
             try
             {
                 var success = functionToTest.Invoke(_obj, _testData);
 
-                Add(new TestCheck(success) { Description = description, ReturnValue = success.ToString() }, true);
+                Add(new TestCheck(description, success.ToString(), success), true);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, description);
                 Add(new TestCheck(null, ex) { Description = description }, true);
             }
 
@@ -270,15 +308,17 @@ namespace TestChecker.Core
 
         public async Task<TestCheck<T, TData>> TestIsTrueAsync(string description, Func<T, TData, Task<bool>> functionToTest)
         {
+            if (!RunTest(description)) return this;
+
             try
             {
                 var success = await functionToTest.Invoke(_obj, _testData).ConfigureAwait(false);
 
-                Add(new TestCheck(success) { Description = description, ReturnValue = success.ToString() }, true);
+                Add(new TestCheck(description, success.ToString(), success), true);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, description);
                 Add(new TestCheck(null, ex) { Description = description }, true);
             }
 
@@ -287,15 +327,17 @@ namespace TestChecker.Core
 
         public async Task<TestCheck<T, TData>> TestIsTrueAsync(string description, Func<TData, Task<bool>> functionToTest)
         {
+            if (!RunTest(description)) return this;
+
             try
             {
                 var success = await functionToTest(_testData).ConfigureAwait(false);
 
-                Add(new TestCheck(success) { Description = description, ReturnValue = success.ToString() }, true);
+                Add(new TestCheck(description, success.ToString(), success), true);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, description);
                 Add(new TestCheck(null, ex) { Description = description }, true);
             }
 
@@ -312,7 +354,7 @@ namespace TestChecker.Core
 
         private string GetMethodName(MemberExpression memberExpression)
         {
-            return $"{ObjectName}.{memberExpression.Member.Name}";
+            return $"{memberExpression.Member.Name}";
         }
 
         private string GetMethodNameFallback(MethodCallExpression methodCallExpression)
@@ -335,7 +377,7 @@ namespace TestChecker.Core
                 {
                     var method = (methodCallExpression.Arguments[0] as MemberExpression).Member.Name;
 
-                    return $"{ObjectName}.{method}";
+                    return $"{method}";
                 }
 
                 if (methodCallExpression.Arguments.Count == 1 && methodCallExpression.Arguments[0].NodeType == ExpressionType.Call)
@@ -352,7 +394,7 @@ namespace TestChecker.Core
                 {
                     var method = (methodCallExpression.Arguments[0] as MemberExpression).Member.Name;
 
-                    return $"{ObjectName}.{method}";
+                    return $"{method}";
                 }
 
                 if(methodCallExpression.Arguments.Count == 0)
@@ -363,11 +405,11 @@ namespace TestChecker.Core
                 var paramTypes = methodCallExpression.Arguments.Select(s => s.Type).ToArray();
                 var parameters = typeof(T).GetMethod(methodCallExpression.Method.Name, paramTypes)?.GetParameters();
 
-                return $"{ObjectName}.{methodCallExpression.Method.Name}({string.Join(",", parameters.Select(s => $"{s.ParameterType.Name} {s.Name}"))})";
+                return $"{methodCallExpression.Method.Name}({string.Join(",", parameters.Select(s => $"{s.ParameterType.Name} {s.Name}"))})";
             }
             catch(Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, methodCallExpression.ToString());
             }
 
             return "N/A";
@@ -447,7 +489,7 @@ namespace TestChecker.Core
             }
             catch(Exception ex)
             {
-                _logger?.LogError(ex);
+                _logger?.LogError(ex, methodCallExpression.ToString());
             }
 
             return $"{methodCallExpression}";

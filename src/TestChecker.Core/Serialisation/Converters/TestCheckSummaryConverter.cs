@@ -4,8 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-//[assembly: InternalsVisibleTo("TestChecker.Runner.Tests")]
-namespace TestChecker.Core.Serialisation
+namespace TestChecker.Core.Serialisation.Converters
 {
     internal class TestCheckSummaryConverter : JsonConverter
     {
@@ -24,20 +23,18 @@ namespace TestChecker.Core.Serialisation
             {
                 var deps = new List<TestCheckSummary>();
                 var dep = jObject["DependencyTestChecks"].ToObject<TestCheck>();
-                deps.Add(new TestCheckSummary { System = "Old Tests", ReadTestChecks = dep });
+                deps.Add(new TestCheckSummary { System = new SystemInfo { Name = "Old Tests" }, ReadTestChecks = dep });
 
                 //v1 - Not the best
                 var summary = new TestCheckSummary
                 {
                     DependencyTestChecks = deps,
-                    Environment = jObject["Environment"].Value<string>(),
                     ReadTestChecks = jObject["ReadTestChecks"].ToObject<TestCheck>(),
                     Success = jObject["Success"].Value<bool>(),
-                    System = jObject["System"].Value<string>(),
+                    System = SystemInfo.CreateFrom(jObject["System"].Value<string>()),
                     TestCoverage = jObject["TestCoverage"].ToObject<Coverage>(),
                     TestData = null,    //Not the best
                     TestDate = jObject["TestDate"].Value<string>(),
-                    Version = jObject["Version"].Value<string>(),
                     WriteTestChecks = jObject["WriteTestChecks"].ToObject<TestCheck>(),
                 };
 

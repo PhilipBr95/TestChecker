@@ -4,10 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using TestChecker.Core.Enums;
 
 namespace TestChecker.Core
 {
-    [DebuggerDisplay("Coverage = {Percentage}%")]
+    [DebuggerDisplay("{Detail} @ {Percentage}%")]
     public class Coverage
     {
         public string Object { get; private set; }
@@ -20,9 +21,9 @@ namespace TestChecker.Core
         public string Detail { get; set; }
 
         [JsonIgnore]
-        public IList<string> Hits { get; private set; } = new List<string>();
+        public List<string> Hits { get; private set; } = new List<string>();
         [JsonIgnore]
-        public IList<string> Total { get; private set; } = new List<string>();
+        public List<string> Total { get; private set; } = new List<string>();
 
         public Coverage()
         {
@@ -41,7 +42,7 @@ namespace TestChecker.Core
             Detail = $"[{Hits.Count()} / {Total.Count()}]";
         }
 
-        public Coverage(string objectName, CoverageMethod? coverageMethod, IList<string> hits, IList<string> total)
+        public Coverage(string objectName, CoverageMethod? coverageMethod, List<string> hits, List<string> total)
         {
             Object = objectName;
             CoverageMethod = coverageMethod;            
@@ -53,10 +54,32 @@ namespace TestChecker.Core
             UpdateStats();
         }
 
-        public Coverage(List<Coverage> list)
-        {
-            Hits = list.Where(w => w?.Hits != null).SelectMany(s => s.Hits).Distinct().ToList();
-            Total = list.Where(w => w?.Total != null).SelectMany(s => s.Total).Distinct().ToList();
+        public Coverage(List<Coverage> coverages)
+        {            
+            foreach(var coverage in coverages)
+            {
+                if (coverage == null)
+                    continue;
+
+                if(coverage.Total.Count > 0)
+                {
+                    Hits.AddRange(coverage.Hits.Distinct().ToList());
+                    Total.AddRange(coverage.Total.Distinct().ToList());
+                }
+                else
+                {
+                    if (coverage.Detail.Length > 4)
+                    {
+                        //Bit of a hack - todo
+                        var sections = coverage.Detail.Substring(1, coverage.Detail.Length-2).Split('/');
+                        if (sections.Length == 2)
+                        {
+                            Hits.AddRange(Enumerable.Range(0, int.Parse(sections[0].Trim())).Select(s => $"Faked {s}"));
+                            Total.AddRange(Enumerable.Range(0, int.Parse(sections[1].Trim())).Select(s => $"Faked {s}"));
+                        }
+                    }
+                }
+            }
 
             UpdateStats();
         }

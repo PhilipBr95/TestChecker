@@ -7,7 +7,9 @@ namespace TestChecker.Core
     public interface ITestCheckDependency
     {
         ITestCheckable Service { get; }        
-        Task<TestCheckSummary> RunTestAsync(Actions action, string apiKey, string json);
+        Task<T> RunTestActionAsync<T>(TestSettings testSettings);
+        //Task<TestCheckSummary> RunTestAsync(TestSettings testSettings);
         Task<List<NamedTestData>> GetTestDataAsync();
+        Task<VersionInfo> GetVersionInfoAsync();
     }
 }
