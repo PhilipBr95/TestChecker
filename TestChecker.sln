@@ -29,6 +29,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApplicationOldChild", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApplicationOldChildClient", "scenarios\WebApplicationOldChildClient\WebApplicationOldChildClient.csproj", "{21D79EB1-89B3-4BC9-A923-E07C440B39CC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget", "nuget", "{E112F1F9-2449-4D0B-8033-5754E21790D3}"
+	ProjectSection(SolutionItems) = preProject
+		nuget\TestChecker.Core.1.0.0.1.nupkg = nuget\TestChecker.Core.1.0.0.1.nupkg
+		nuget\TestChecker.Runner.1.0.0.1.nupkg = nuget\TestChecker.Runner.1.0.0.1.nupkg
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,9 +74,13 @@ Global
 		{AC3A8895-7A21-4750-AE00-2A32747F7009}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC3A8895-7A21-4750-AE00-2A32747F7009}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5604BB7E-9176-4515-BEDB-A5A74D4242E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5604BB7E-9176-4515-BEDB-A5A74D4242E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5604BB7E-9176-4515-BEDB-A5A74D4242E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5604BB7E-9176-4515-BEDB-A5A74D4242E4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{21D79EB1-89B3-4BC9-A923-E07C440B39CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21D79EB1-89B3-4BC9-A923-E07C440B39CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21D79EB1-89B3-4BC9-A923-E07C440B39CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21D79EB1-89B3-4BC9-A923-E07C440B39CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
