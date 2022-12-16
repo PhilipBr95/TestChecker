@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 env:
-  buildVersion: 17.0.0.2
+  buildVersion: 1.0.0.$GITHUB_RUN_NUMBER
   
 jobs:
   build:
@@ -28,7 +28,7 @@ jobs:
       run: dotnet test --no-build -c Release --verbosity normal
     - name: Pack
       run: dotnet pack --no-restore -c Release -p:VersionSuffix=$GITHUB_RUN_NUMBER -o out
-    - name: nugetadd
+    - name: Nuget add source
       run: dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/PhilipBr95/index.json"
-    - name: nugetpush
+    - name: Nuget push
       run: dotnet nuget push "out/TestChecker*.nupkg" --source "github"
