@@ -43,7 +43,7 @@ namespace TestChecker.Runner
         public static void UseTestEndpoint<TData>(this IApplicationBuilder app, List<ITestCheckDependency> dependencies, Func<ITestChecks<TData>> testChecks, string readEnvironmentName = READ_ENVIRONMENT_NAME, string readWriteEnvironmentName = READ_WRITE_ENVIRONMENT_NAME) where TData : class, new()
         {
             _methodNameExtractor = app.ApplicationServices.GetService<IMethodNameExtractorService>();
-            if (_methodNameExtractor == null) throw new InvalidOperationException($"Call ServiceCollection.AppTestEndpoint() first");
+            if (_methodNameExtractor == null) throw new InvalidOperationException($"Call ServiceCollection.{nameof(AddTestEndpoint)}() first");
 
             _testCheckDependencyRunner = new TestCheckDependencyRunner(dependencies, app.ApplicationServices.GetRequiredService<ILogger<TestCheckDependencyRunner>>());
 
