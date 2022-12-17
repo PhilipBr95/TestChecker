@@ -30,5 +30,7 @@ jobs:
       run: dotnet pack --no-restore -c Release -p:VersionSuffix=$GITHUB_RUN_NUMBER -o out
     - name: Nuget add source
       run: dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/PhilipBr95/index.json"
-    - name: Nuget push
-      run: dotnet nuget push "out/TestChecker*nupkg" --source "github"
+    - name: Nuget push nupkg
+      run: dotnet nuget push "out/TestChecker.*nupkg" --source "github"
+    - name: Nuget push snupkg
+      run: dotnet nuget push "out/TestChecker.*snupkg" --source "github"
