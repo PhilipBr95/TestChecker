@@ -31,6 +31,6 @@ jobs:
     - name: Nuget add source
       run: dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/PhilipBr95/index.json"
     - name: Nuget push nupkg
-      run: dotnet nuget push "out/TestChecker.*nupkg" --source "github"
+      run: dotnet nuget push "out/TestChecker*.nupkg" --source "github"
     - name: Nuget push snupkg
-      run: dotnet nuget push "out/TestChecker.*snupkg" --source "github"
+      run: dotnet nuget push "out/TestChecker*.snupkg" --source "github"
