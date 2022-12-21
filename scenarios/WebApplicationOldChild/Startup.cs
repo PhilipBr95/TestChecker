@@ -57,7 +57,9 @@ namespace WebApplicationOldChild
                 endpoints.MapControllers();
             });
 
-            app.UseTestEndpoint<MyTestData>(null, () => new MyTestChecks());
+            var myController = new MyController();
+
+            app.UseTestEndpoint(null, () => new MyTestChecks(myController, new MyTestData { EmployerId = 555 }));
 
         }
     }

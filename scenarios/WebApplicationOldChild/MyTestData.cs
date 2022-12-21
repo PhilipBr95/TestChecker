@@ -2,6 +2,6 @@
 {
     public class MyTestData
     {
-        public string OldSurname { get; set; }
+        public int EmployerId { get; set; }
     }
 }

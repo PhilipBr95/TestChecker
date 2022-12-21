@@ -4,47 +4,54 @@ using TestChecker.Runner;
 
 namespace WebApplicationOldChild
 {
-    public interface IMyTests
+    public class Employer
     {
-        bool TestName(string name);
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 
-    public class MyTests : IMyTests
+    public interface ImyController
     {
-        public bool TestName(string name)
+        Employer GetEmployer(int employerId);
+    }
+
+    public class MyController : ImyController
+    {
+        public Employer GetEmployer(int employerId)
         {
-            return "OldBriggs" == name;
+            return new Employer { Id = employerId, Name = "MyEmployer" };
         }
     }
 
     internal class MyTestChecks : ITestChecks<MyTestData>
     {
-        private MyTestData _testData { get; set; } = new MyTestData { OldSurname = "OldBriggs" };
+        private readonly ImyController _myController;
+        private MyTestData _testData;
 
-        public MyTestData GetTestData()
+        public MyTestChecks(MyController myController, MyTestData testData)
         {
-            return _testData;
+            _myController = myController;
+            _testData = testData;
         }
 
-        public Task<TestCheck> RunReadTestsAsync()
+        public MyTestData GetTestData() => _testData;
+        public void SetTestData(MyTestData testData) => _testData = testData;
+
+        public async Task<TestCheck> RunReadTestsAsync()
         {
-            var controller = new MyTests();
-            var allTests = new TestCheck("All Tests");
-            var tests = new TestCheck<IMyTests, MyTestData>(controller, _testData, CoverageMethod.MethodsOnly, null);
-            tests.TestIsTrue(x => x.TestName(_testData.OldSurname));
+            var allTests = new TestCheck("MyController Tests");
+
+            var tests = new TestCheck<ImyController, MyTestData>(_myController, _testData, CoverageMethod.MethodsOnly, null);
+            tests.TestIsObject(x => x.GetEmployer(_testData.EmployerId));
+
             allTests.Add(tests);
 
-            return Task.FromResult(allTests);
+            return await Task.FromResult(allTests);
         }
 
         public Task<TestCheck> RunWriteTestsAsync()
         {
             throw new System.NotImplementedException();
-        }
-
-        public void SetTestData(MyTestData testData)
-        {
-            _testData = testData;
-        }
+        }        
     }
 }
