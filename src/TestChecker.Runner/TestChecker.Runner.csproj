@@ -55,10 +55,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\README.md" Link="README.md" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\TestChecker.Core\TestChecker.Core.csproj" />
   </ItemGroup>
 
