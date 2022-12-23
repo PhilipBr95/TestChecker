@@ -9,7 +9,7 @@ The following Endpoints are created:
 * `/testui` will give you a UI to the TestChecks.
 * `/testdata` used internally to transfer TestData.
 
-**NOTE:** To be secure, you should block external access to `/test`.
+**NOTE:** To be secure, you need to block external access to `/test`.
 
 # Examples
 
@@ -32,7 +32,7 @@ app.UseTestEndpoint(new List<ITestCheckDependency> {
 
 ### Setting up TestData
 
-Provide TestData, so you can paramaterise the tests and change the details - **This is useful if using the endpoint to help with debugging**.
+Provide TestData, so you can paramaterise the tests and change details dynamically - **This is useful if using the endpoint to help with debugging**.
 
 ```c#
 public class MyTestData
@@ -43,7 +43,17 @@ public class MyTestData
 
 ### Implement ITestCheck
 
-Create a class that implements `ITestCheck`, which you pass into `UseTestEndpoint`
+Create a class that implements `ITestCheck`, which you pass into `UseTestEndpoint`.  
+This class should hit every method in the interface you want to test via the following functions:
+* TestIsTrue
+* TestIsTrueAsync
+* TestIsObject
+* TestIsObjectAsync
+
+These tests will track which methods you have called and give you an idea of test coverage.   
+
+**NOTE:** It's recommended that you use `TestIsObject/TestIsObjectAsync` as the output will be returned in the json and you can then use that as before/after test.   
+
 
 ```c#
 class MyTestChecks : ITestChecks<MyTestData>
