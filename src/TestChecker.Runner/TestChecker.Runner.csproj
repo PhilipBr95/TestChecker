@@ -12,6 +12,7 @@
 
   <PropertyGroup>
 	<PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 	
   <PropertyGroup>
@@ -52,6 +53,7 @@
     <EmbeddedResource Include="Templates\TestUI.cshtml">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+	<None Include="README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
   <ItemGroup>
