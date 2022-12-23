@@ -8,11 +8,12 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-	<PropertyGroup>
-		<PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
-	</PropertyGroup>
+  <PropertyGroup>
+	<PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
 
-	<PropertyGroup>
+  <PropertyGroup>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
@@ -23,6 +24,10 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
   </ItemGroup>
 
+  <ItemGroup>
+	<None Include="README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+	
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
