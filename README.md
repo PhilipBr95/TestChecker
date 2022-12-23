@@ -91,7 +91,7 @@ class MyTestChecks : ITestChecks<MyTestData>
 
 ### Hitting /test
 
-Hitting the `/test` endpoint will return the TestCheck results.  
+Hitting the `/test` endpoint will return the TestCheck results as json.  
 If configured correctly, this will hit every controller endpoint, thus helping with regression.  
 eg, compare the `/test` results from the current website with the new website.
 
