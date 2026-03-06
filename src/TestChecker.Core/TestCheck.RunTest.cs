@@ -19,6 +19,15 @@ namespace TestChecker.Core
 
         public static bool GetNamesOnly => CurrentTestSettings?.Action.HasFlag(Actions.GetNames) == true;
 
+        /// <summary>
+        /// Determines whether the specified test method should be executed based on the current test settings
+        /// </summary>
+        /// <remarks>If test settings are not configured, all test methods are considered eligible for
+        /// execution. When 'GetNamesOnly' is enabled, the method records the test method name and returns false,
+        /// indicating the test should not be run. If specific test methods are defined in the current settings, only
+        /// those matching the provided method name are eligible for execution.</remarks>
+        /// <param name="method">The name of the test method to evaluate for execution. Cannot be null or empty.</param>
+        /// <returns>true if the test method should be executed; otherwise, false.</returns>
         public bool RunTest(string method)
         {
             if (CurrentTestSettings == null) 
@@ -32,7 +41,8 @@ namespace TestChecker.Core
 
             if (CurrentTestSettings.HasTestMethods(AssemblyName))
             {
-                return CurrentTestSettings.TestMethods.Contains($"{ObjectName}.{method}") || 
+                return CurrentTestSettings.TestMethods == null ||
+                        CurrentTestSettings.TestMethods.Contains($"{ObjectName}.{method}") || 
                         CurrentTestSettings.TestMethods.Contains($"{AssemblyName}.{method}");
             }
 

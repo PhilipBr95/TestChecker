@@ -41,7 +41,7 @@
         <h1>Test Configuration</h1>
         <p>
             Use this form to edit the test data for your scenario and exclude certain tests from execution.<br />
-            <b>Specify the Read or Write ApiKey to authorise which tests to run.</b>
+            <b>Specify the Read or Write(also runs Read tests) ApiKey to authorise which tests to run.</b>
         </p>
     </header>
 	
@@ -72,7 +72,7 @@
 				<div class="divTableRow">
 					<div class="divTableCellHeader"></div>
 					<div class="divTableCellDetail divTableCellButtons" >
-						<input class="toggleButton" type="button" value="Toggle Methods" />
+						<input class="toggleButton" type="button" value="Toggle Methods" onclick="toggleTests();" />
 						<input class="submitButton" type="submit" value="Execute" onclick="syncTestData();" />
 						<span class="executeOptions">
 							<input id="useUI" checked="checked" name="useUI" type="checkbox" value="true" /><label for="useUI">Use UI</label>

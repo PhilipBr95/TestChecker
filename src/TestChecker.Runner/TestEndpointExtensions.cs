@@ -149,7 +149,9 @@ namespace TestChecker.Runner
         private static Task<string> GenerateTestResultsUIAsync(string json)
         {
             string html = GetHtmlTemplate("TestResultsUI.cshtml");
-            html = html.Replace("@Model.Results", json);
+
+            //Add the results json
+            html = html.Replace("@Model.Results", json.Replace("\\\"", "\\\\\""));
 
             return Task.FromResult(html);
         }

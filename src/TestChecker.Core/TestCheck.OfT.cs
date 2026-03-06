@@ -63,7 +63,6 @@ namespace TestChecker.Core
             return this;
         }
 
-
         public async Task<TestCheck<T, TData>> TestIsObjectAsync<TOut>(Expression<Func<T, TData, Task<TOut>>> functionToTest, int maxDepth = 1)
         {
             var methodCallExpression = (functionToTest.Body as MethodCallExpression);
@@ -82,6 +81,32 @@ namespace TestChecker.Core
                 var success = ObjectSerialiser.IsObject();
 
                 Add(new TestCheck(method, parameters, success, ObjectSerialiser.SerialiseObject(maxDepth)), true);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, method);
+                Add(new TestCheck(method, ex), true);
+            }
+
+            return this;
+        }
+
+        public async Task<TestCheck<T, TData>> TestIsVoidAsync<TOut>(Expression<Func<T, TData, Task<TOut>>> functionToTest, int maxDepth = 1)
+        {
+            var methodCallExpression = (functionToTest.Body as MethodCallExpression);
+            string method = GetMethodName(methodCallExpression);
+
+            if (!RunTest(method)) return this;
+
+            try
+            {
+                var parameters = GetParamsStringForMethod(methodCallExpression);
+
+                var function = functionToTest.Compile();
+                var obj = await function.Invoke(_obj, _testData).ConfigureAwait(false);
+                ObjectSerialiser.SetObject(obj);
+                
+                Add(new TestCheck(method, parameters, true, ObjectSerialiser.SerialiseObject(maxDepth)), true);
             }
             catch (Exception ex)
             {
@@ -382,11 +407,16 @@ namespace TestChecker.Core
 
                 if (methodCallExpression.Arguments.Count == 1 && methodCallExpression.Arguments[0].NodeType == ExpressionType.Call)
                 {
-                    var expression = methodCallExpression.Arguments[0] as MethodCallExpression;
-
-                    if(expression != null)
+                    //This is to handle cases where the method call is wrapped in another method call (e.g. for async methods)
+                    var methods = typeof(T).GetMethods();
+                    if (methods.Any(a => a.Name == methodCallExpression.Method.Name) == false)
                     {
-                        methodCallExpression = expression;
+                        var expression = methodCallExpression.Arguments[0] as MethodCallExpression;
+
+                        if (expression != null)
+                        {
+                            methodCallExpression = expression;
+                        }
                     }
                 }
 
@@ -435,11 +465,16 @@ namespace TestChecker.Core
 
                 if (methodCallExpression.Arguments.Count == 1 && methodCallExpression.Arguments[0].NodeType == ExpressionType.Call)
                 {
-                    var expression = methodCallExpression.Arguments[0] as MethodCallExpression;
-
-                    if (expression != null)
+                    //This is to handle cases where the method call is wrapped in another method call (e.g. for async methods)
+                    var methods = typeof(T).GetMethods();
+                    if (methods.Any(a => a.Name == methodCallExpression.Method.Name) == false)
                     {
-                        methodCallExpression = expression;
+                        var expression = methodCallExpression.Arguments[0] as MethodCallExpression;
+
+                        if (expression != null)
+                        {
+                            methodCallExpression = expression;
+                        }
                     }
                 }
 

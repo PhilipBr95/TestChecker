@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using TestChecker.Core;
+using TestChecker.Core.Enums;
 using TestChecker.Runner;
 
 namespace WebApplicationOldChild
