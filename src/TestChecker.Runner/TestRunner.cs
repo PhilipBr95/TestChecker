@@ -136,7 +136,7 @@ namespace TestChecker.Runner
 
             long successCount = (readTestChecks?.SuccessCount ?? 0) + 
                                 (writeTestChecks?.SuccessCount ?? 0) +
-                                dependencyTestChecks?.Sum(s => s.GetSuccessCount()) ?? 0;
+                                (dependencyTestChecks?.Sum(s => s.GetSuccessCount()) ?? 0);
 
             return new TestCheckSummary
             {
