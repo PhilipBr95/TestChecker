@@ -63,8 +63,11 @@ namespace TestChecker.Core
 
                 if(coverage.Total.Count > 0)
                 {
-                    Hits.AddRange(coverage.Hits.Distinct().ToList());
-                    Total.AddRange(coverage.Total.Distinct().ToList());
+                    var newHits = coverage.Hits.Except(Hits);
+                    Hits.AddRange(newHits.Distinct().ToList());
+
+                    var newTotal = coverage.Total.Except(Total);
+                    Total.AddRange(newTotal.Distinct().ToList());
                 }
                 else
                 {
