@@ -150,8 +150,12 @@ namespace TestChecker.Runner
         {
             string html = GetHtmlTemplate("TestResultsUI.cshtml");
 
+            //Simple escaping
+            json = json.Replace("\\\"", "\\\\\""))
+                       .Replace("`", "\\`");
+            
             //Add the results json
-            html = html.Replace("@Model.Results", json.Replace("\\\"", "\\\\\""));
+            html = html.Replace("@Model.Results", json);
 
             return Task.FromResult(html);
         }
