@@ -3,7 +3,7 @@ name: .NET Publish to nuget.org
 on: workflow_dispatch
 
 env:
-  buildVersion: 1.1.${{ github.run_number }}
+  buildVersion: 1.1.10
   
 jobs:
   build:
