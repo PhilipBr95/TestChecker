@@ -16,7 +16,10 @@ namespace TestChecker.Core
 
         internal static SystemInfo Create(string url = null)
         {
-            var assemblyName = System.Reflection.Assembly.GetEntryAssembly().GetName();
+            var assembly = System.Reflection.Assembly.GetEntryAssembly() ??
+                            System.Reflection.Assembly.GetExecutingAssembly();
+
+            var assemblyName = assembly.GetName();
             return new SystemInfo { Name = assemblyName.Name, Version = assemblyName.Version, Url = url };
         }
 

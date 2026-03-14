@@ -2,22 +2,20 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Linq;
+using System.Xml.Linq;
 using TestChecker.Core;
-using Newtonsoft.Json.Linq;
-using TestChecker.Runner.Extensions;
-using TestChecker.Core.Serialisation;
-using TestChecker.Runner.Services;
-using TestChecker.Core.Enums;
 using TestChecker.Core.Models;
-using System.Runtime;
+using TestChecker.Core.Serialisation;
+using TestChecker.Runner.Extensions;
+using TestChecker.Runner.Services;
 
 namespace TestChecker.Runner
 {
@@ -56,48 +54,7 @@ namespace TestChecker.Runner
 
                 app.Use(async (context, next) =>
                 {
-                    if (context.Request.Path.Value.Equals(TESTDATA_END_POINT, StringComparison.CurrentCultureIgnoreCase))
-                    {                        
-                        var testData = await runner.GetTestDataAsync(null).ConfigureAwait(false);
-                        string json = JsonSerialiser.Serialise(testData);
-
-                        context.Response.ContentType = "application/json";
-                        await context.Response.WriteAsync(json).ConfigureAwait(false);
-                    }
-                    else if (context.Request.Path.Value.Equals(TESTUI_END_POINT, StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
-                        string html = await GenerateTestUIAsync(settings, Assembly.GetEntryAssembly(), runner, context.Request.GetUrl(), testChecks).ConfigureAwait(false);
-
-                        context.Response.ContentType = "text/html";
-                        await context.Response.WriteAsync(html).ConfigureAwait(false);
-                    }
-                    else if (context.Request.Path.Value.Equals(TEST_END_POINT, StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        CheckTData<TData>();                        
-
-                        var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
-                        
-                        //Only the initial settings need UseUI
-                        var useUI = settings.UseUI;
-                        settings.UseUI = false;
-
-                        string json = await ExecuteTestsAsync(settings, runner, context.Request.GetUrl()).ConfigureAwait(false);
-
-                        if (useUI)
-                        {
-                            string html = await GenerateTestResultsUIAsync(json).ConfigureAwait(false);
-
-                            context.Response.ContentType = "text/html";
-                            await context.Response.WriteAsync(html).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            context.Response.ContentType = "application/json";
-                            await context.Response.WriteAsync(json).ConfigureAwait(false);
-                        }
-                    }
-                    else
+                    if (await HandleContextAsync(runner, testChecks, context) == false)
                     {
                         await next().ConfigureAwait(false);
                     }
@@ -108,7 +65,60 @@ namespace TestChecker.Runner
                 _logger?.LogError(ex);
                 throw;
             }
-        }        
+        }
+
+        private static async Task<bool> HandleContextAsync<TData>(TestRunner<TData> runner, Func<ITestChecks<TData>> testChecks, HttpContext context) where TData : class, new()
+        {
+            if (context.Request.Path.Value.Equals(TESTDATA_END_POINT, StringComparison.CurrentCultureIgnoreCase))
+            {
+                var testData = await runner.GetTestDataAsync(null).ConfigureAwait(false);
+                string json = JsonSerialiser.Serialise(testData);
+
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync(json).ConfigureAwait(false);
+
+                return true;
+            }
+            else if (context.Request.Path.Value.Equals(TESTUI_END_POINT, StringComparison.CurrentCultureIgnoreCase))
+            {
+                var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
+                string html = await GenerateTestUIAsync(settings, Assembly.GetEntryAssembly(), runner, context.Request.GetUrl(), testChecks).ConfigureAwait(false);
+
+                context.Response.ContentType = "text/html";
+                await context.Response.WriteAsync(html).ConfigureAwait(false);
+
+                return true;
+            }
+            else if (context.Request.Path.Value.Equals(TEST_END_POINT, StringComparison.CurrentCultureIgnoreCase))
+            {
+                CheckTData<TData>();
+
+                var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
+
+                //Only the initial settings need UseUI
+                var useUI = settings.UseUI;
+                settings.UseUI = false;
+
+                string json = await ExecuteTestsAsync(settings, runner, context.Request.GetUrl()).ConfigureAwait(false);
+
+                if (useUI)
+                {
+                    string html = await GenerateTestResultsUIAsync(json).ConfigureAwait(false);
+
+                    context.Response.ContentType = "text/html";
+                    await context.Response.WriteAsync(html).ConfigureAwait(false);
+                }
+                else
+                {
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsync(json).ConfigureAwait(false);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
 
         private static void CheckTData<TData>()
         {
