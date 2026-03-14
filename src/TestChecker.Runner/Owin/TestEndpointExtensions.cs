@@ -25,33 +25,7 @@ namespace TestChecker.Runner
 
                 app.Use(async (context, next) =>
                 {
-                    if (context.Request.Path.Value.Equals(TESTDATA_END_POINT, StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        var testData = await runner.GetTestDataAsync(null).ConfigureAwait(false);
-                        string json = JsonSerialiser.Serialise(testData);
-
-                        context.Response.ContentType = "application/json";
-                        await context.Response.WriteAsync(json).ConfigureAwait(false);
-                    }
-                    else if (context.Request.Path.Value.Equals(TESTUI_END_POINT, StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
-                        string html = await GenerateTestUIAsync(settings, assembly, runner, context.Request.Uri.ToString(), testChecks).ConfigureAwait(false);
-
-                        context.Response.ContentType = "text/html";
-                        await context.Response.WriteAsync(html).ConfigureAwait(false);
-                    }
-                    else if (context.Request.Path.Value.Equals(TEST_END_POINT, StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        CheckTData<TData>();
-
-                        var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
-                        var json = await ExecuteTestsAsync(settings, runner, context.Request.Uri.ToString()).ConfigureAwait(false);
-
-                        context.Response.ContentType = "application/json";
-                        await context.Response.WriteAsync(json).ConfigureAwait(false);
-                    }
-                    else
+                    if (await HandleContextAsync(runner, testChecks, context) == false)
                     {
                         await next().ConfigureAwait(false);
                     }
