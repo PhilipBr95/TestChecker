@@ -3,7 +3,7 @@ name: .NET Publish to nuget.org
 on: workflow_dispatch
 
 env:
-  buildVersion: 1.1.10
+  buildVersion: 1.1.11
   
 jobs:
   build:
@@ -19,11 +19,11 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore -c Release -p:VersionSuffix=10
+      run: dotnet build --no-restore -c Release -p:VersionSuffix=11
     - name: Test
       run: dotnet test --no-build -c Release --verbosity normal
     - name: Pack
-      run: dotnet pack --no-restore -c Release -p:VersionSuffix=10 -o out
+      run: dotnet pack --no-restore -c Release -p:VersionSuffix=11 -o out
     - name: Nuget push nupkg
       run: dotnet nuget push "out/TestChecker*.nupkg" --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json
 
