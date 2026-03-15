@@ -25,7 +25,15 @@ namespace TestChecker.Runner
 
                 app.Use(async (context, next) =>
                 {
-                    if (await HandleContextAsync(runner, testChecks, context) == false)
+                    if (IsTestRequest(context.Request.Path.Value))
+                    {
+                        var settings = await TestSettingsRetriever.GetSettingsAsync(context.Request).ConfigureAwait(false);
+                        var response = await HandleContextAsync(context.Request.Path.Value, context.Request.GetUrl(), settings, runner, testChecks);
+
+                        context.Response.ContentType = response.ContentType;
+                        await context.Response.WriteAsync(response.Content).ConfigureAwait(false);
+                    }
+                    else
                     {
                         await next().ConfigureAwait(false);
                     }
