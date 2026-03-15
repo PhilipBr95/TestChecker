@@ -4,6 +4,7 @@
     <Version Condition=" '$(buildVersion)' == '' ">1.0.0.1</Version>
     <Version Condition=" '$(buildVersion)' != '' ">$(buildVersion)</Version>
     <TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
+	<LangVersion>10.0</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <SignAssembly>true</SignAssembly>
