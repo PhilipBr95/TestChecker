@@ -18,7 +18,7 @@ namespace WebAppOwin
                     defaults: new { id = RouteParameter.Optional }
                 );
 
-                appBuilder.UseWebApi(config);
+                //appBuilder.UseWebApi(config);
             }
         }
 }
